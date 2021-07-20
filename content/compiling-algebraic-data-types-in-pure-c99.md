@@ -1,6 +1,6 @@
 ---
 title: "Compiling Algebraic Data Types in Pure C99"
-author: <a href="..">hirrolot</a>
+author: hirrolot
 date: May 25, 2021
 ---
 
