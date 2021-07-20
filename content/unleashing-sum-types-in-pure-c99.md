@@ -1,6 +1,6 @@
 ---
 title: "Unleashing Sum Types in Pure C99"
-author: <a href="..">hirrolot's Blog</a>
+author: hirrolot's Blog
 date: Feb 6, 2021
 ---
 

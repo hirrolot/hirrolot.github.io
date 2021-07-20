@@ -1,6 +1,6 @@
 ---
 title: "Expression-Oriented Programming in C: The FMT Macro"
-author: <a href="..">hirrolot's Blog</a>
+author: hirrolot's Blog
 date: May 14, 2021
 ---
 
