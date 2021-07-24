@@ -15,7 +15,6 @@ title: hirrolot
 <a href="mailto:hirrolot@gmail.com">Gmail</a>
 </p>
 </div>
-<hr>
 
 [teloxide]: https://github.com/teloxide/teloxide
 [Metalang99]: https://github.com/hirrolot/metalang99
