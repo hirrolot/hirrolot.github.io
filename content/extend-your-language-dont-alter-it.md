@@ -1,8 +1,4 @@
 ---
-title: "Extend Your Language, Don't Alter It"
-author: hirrolot
-date: Jul 6, 2021
-
 references:
   - id: mlib
     title: "Generic type-safe Container Library for C language"
