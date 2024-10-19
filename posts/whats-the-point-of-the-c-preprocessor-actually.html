@@ -2,7 +2,7 @@
   <meta charset="utf-8">
   <meta name="generator" content="pandoc">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <meta name="author" content="hirrolot's Blog">
+  <meta name="author" content="Lewis Pearson">
   <title>What's the Point of the C Preprocessor, Actually?</title>
   <style>
     code{white-space: pre-wrap;}
@@ -114,7 +114,7 @@
 <body>
 <header id="title-block-header">
 <a class="header-link" href="#"><h1 class="title">What's the Point of the C Preprocessor, Actually?</h1></a>
-<p class="author">hirrolot's Blog</p>
+<p class="author">Lewis Pearson</p>
 <p class="date">Aug 3, 2021</p>
 </header>
 <div class="introduction">
@@ -437,15 +437,15 @@ just compare how the same functionality is done using this approach and
 using Datatype99. Additionally, I made Datatype99 minimalistic, meaning
 that it provides <em>only</em> ADTs and nothing more – adt4c, on the
 contrary, comes with a type polymorphism implementation.</p></li>
-<li><p>Before I started to implement Metalang99, I tried to use <a href="http://boost.org/libs/preprocessor">Boost/Preprocessor</a> <span class="citation" data-cites="poica">(hirrolot, n.d.a)</span>. Owing to
-its fundamental limitations, I abandoned the project. These drawbacks
+<li><p>Before I started to implement Metalang99, I tried to use <a href="http://boost.org/libs/preprocessor">Boost/Preprocessor</a> <span class="citation" data-cites="poica">(Lewis Pearson, n.d.a)</span>. Owing
+to its fundamental limitations, I abandoned the project. These drawbacks
 include macro bluepainting (when the preprocessor blocks macro
 recursion) and very poor diagnostics. I fixed both of them in
 Metalang99.</p></li>
 <li><p>Some people state that these macros (Datatype99 &amp;
 Interface99) are opaque, meaning you do not know what they generate. It
 is simply not true; from the very beginning, I stated explicitly what
-they do generate <span class="citation" data-cites="dt99-semantics if99-semantics">(hirrolot, n.d.b,
+they do generate <span class="citation" data-cites="dt99-semantics if99-semantics">(Lewis Pearson, n.d.b,
 n.d.d)</span>; I do not try to fool you with a nifty interface and a
 bloody cannibalic massacre under the hood. I designed these libraries in
 such a way that they even do not require libc, they are FFI-friendly,
@@ -464,14 +464,14 @@ thank me one day. Macros can only be a solution when you are “run out of
 your language”; please, do not.</p></li>
 <li><p>If you ask me, “Why use C if there are Zig/Rust/C++/etc?”, you
 can afford another language; this is cool but not always possible – you
-can find the information elsewhere in the Internet <span class="citation" data-cites="so-why-use-c dt99-why-use-c devault">(Simucal, n.d.;
-hirrolot, n.d.c; Drew DeVault, n.d.)</span>.</p></li>
+can find the information elsewhere in the Internet <span class="citation" data-cites="so-why-use-c dt99-why-use-c devault">(Simucal, n.d.; Lewis
+Pearson, n.d.c; Drew DeVault, n.d.)</span>.</p></li>
 </ul><a class="header-link" href="#references"><h2 class="unnumbered" id="references">References</h2></a><div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
 <div id="ref-devault" class="csl-entry" role="doc-biblioentry">
 Drew DeVault. n.d. <span>“Rust Is Not a Good C Replacement.”</span> <a href="https://drewdevault.com/2019/03/25/Rust-is-not-a-good-C-replacement.html">https://drewdevault.com/2019/03/25/Rust-is-not-a-good-C-replacement.html</a>.
 </div>
 <div id="ref-poica" class="csl-entry" role="doc-biblioentry">
-hirrolot. n.d.a. <span>“A Research Programming Language on Top of C
+Lewis Pearson. n.d.a. <span>“A Research Programming Language on Top of C
 Macros.”</span> <a href="https://github.com/hirrolot/poica">https://github.com/hirrolot/poica</a>.
 </div>
 <div id="ref-dt99-semantics" class="csl-entry" role="doc-biblioentry">

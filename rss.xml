@@ -1,8 +1,8 @@
 <rss version="2.0">
     <channel>
-        <title>hirrolot's Blog</title>
+        <title>Lewis Pearson</title>
         <link>https://hirrolot.github.io/</link>
-        <description>hirrolot's blog about programming and all the stuff.</description>
+        <description>My blog about programming and computer science.</description>
         <language>en-us</language>
         <item>
             <title>Solving SAT via Positive Supercompilation</title>
