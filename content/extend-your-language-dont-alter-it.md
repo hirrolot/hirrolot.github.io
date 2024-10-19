@@ -76,7 +76,7 @@ references:
   - id: compiling-adt-c
     title: "Compiling Algebraic Data Types in Pure C99"
     type: article-journal
-    author: hirrolot
+    author: Lewis Pearson
     URL: "https://hirrolot.github.io/posts/compiling-algebraic-data-types-in-pure-c99.html"
 
   - id: idris-book

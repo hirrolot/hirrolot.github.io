@@ -2,12 +2,12 @@
 references:
   - id: dt99-semantics
     title: "Datatype99 code generation semantics"
-    author: hirrolot
+    author: Lewis Pearson
     URL: "https://github.com/hirrolot/datatype99#semantics"
 
   - id: if99-semantics
     title: "Interface99 code generation semantics"
-    author: hirrolot
+    author: Lewis Pearson
     URL: "https://github.com/hirrolot/interface99#semantics"
 
   - id: so-why-use-c
@@ -17,7 +17,7 @@ references:
 
   - id: dt99-why-use-c
     title: "FAQ: Why use C instead of Rust/Zig/whatever else?"
-    author: hirrolot
+    author: Lewis Pearson
     URL: "https://github.com/hirrolot/datatype99#q-why-use-c-instead-of-rustzigwhatever-else"
 
   - id: devault
@@ -32,7 +32,7 @@ references:
 
   - id: poica
     title: "A research programming language on top of C macros"
-    author: hirrolot
+    author: Lewis Pearson
     URL: "https://github.com/hirrolot/poica"
 ---
 

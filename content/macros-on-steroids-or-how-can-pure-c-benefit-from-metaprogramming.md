@@ -22,7 +22,7 @@ references:
 
   - id: metalang99-iterative-debug
     title: "Q: What about compile-time errors?"
-    author: hirrolot
+    author: Lewis Pearson
     URL: "https://github.com/hirrolot/metalang99#q-what-about-compile-time-errors"
 ---
 
