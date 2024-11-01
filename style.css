@@ -192,13 +192,14 @@ h3,
 h4,
 h5,
 h6,
-.toc-title {
+.toc-title,
+.blog-title {
     font-family: 'Roboto Condensed', sans-serif;
 }
 
-.blog-title {
+/* .blog-title {
     font-family: 'Goddess-Title';
-}
+} */
 
 h1:not(.blog-title):hover,
 h2:hover,
