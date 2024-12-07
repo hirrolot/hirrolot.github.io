@@ -1,10 +1,5 @@
 [
     {
-        "link": "https://www.linkedin.com/in/hirrolot/",
-        "img": "brand-linkedin.svg",
-        "description": "LinkedIn"
-    },
-    {
         "link": "mailto:hirrolot@gmail.com",
         "img": "brand-gmail.svg",
         "description": "Gmail"
