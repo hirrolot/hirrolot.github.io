@@ -163,7 +163,7 @@ Not really.
 When I started designing Metalang99, I was aware of how metaprogramming can go insane. _Metalang99 is an attempt to make it less insane_. With some unhealthy curiosity, you might accidentally call Satan, and he will kindly produce gigabytes of error messages for you, dear. Not kidding, I experienced it on my own:
 
 <div align="center">
-![](../media/posts/whats-the-point-of-the-c-preprocessor-actually/error.png)
+![](../media/content/whats-the-point-of-the-c-preprocessor-actually/error.png)
 </div>
 
 In the above error, I asked a compiler to show a full backtrace of macro expansions. Most of the time, it is just a senseless bedsheet of macro definitions, so I always turn it down by `-ftrack-macro-expansion=0` (GCC) or `-fmacro-backtrace-limit=1` (Clang).
@@ -248,7 +248,7 @@ Looks less nice?
 
 Bad news: it is impossible to handle all kinds of errors in macros gracefully. But we do not need to handle _all_ of them. It would be sufficient to handle _most of them_. Now I shall convince you that even Rust, a language that sells itself as a language with comprehensible errors, even Rust sometimes produces complete nonsense:
 
-![](../media/posts/whats-the-point-of-the-c-preprocessor-actually/big-boy.png)
+![](../media/content/whats-the-point-of-the-c-preprocessor-actually/big-boy.png)
 
 (Kindly given by [Waffle Lapkin].)
 
@@ -257,10 +257,10 @@ Bad news: it is impossible to handle all kinds of errors in macros gracefully. B
 <details>
     <summary>Show more hordes of errors...</summary>
 
-![](../media/posts/whats-the-point-of-the-c-preprocessor-actually/1.jpg)
-![](../media/posts/whats-the-point-of-the-c-preprocessor-actually/2.jpg)
-![](../media/posts/whats-the-point-of-the-c-preprocessor-actually/3.jpg)
-![](../media/posts/whats-the-point-of-the-c-preprocessor-actually/4.jpg)
+![](../media/content/whats-the-point-of-the-c-preprocessor-actually/1.jpg)
+![](../media/content/whats-the-point-of-the-c-preprocessor-actually/2.jpg)
+![](../media/content/whats-the-point-of-the-c-preprocessor-actually/3.jpg)
+![](../media/content/whats-the-point-of-the-c-preprocessor-actually/4.jpg)
 
 (I believe some of them were on stable Rust.)
 

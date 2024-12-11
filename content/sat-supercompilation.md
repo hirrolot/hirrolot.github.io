@@ -71,13 +71,13 @@ A supercompiler's input is a pair of an expression and program, the latter being
 Let the task for a hypothetic supercompiler be the expression `add(S(Z), S(S(Z)))` together with the definition of `add` above. In this case, the work of a supercompiler is as simple as sequential reduction of the initial expression to the target expression `S(S(S(Z)))`, according to the rules of `add`:
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/add-1-2.png" width="400px">
+   <img src="../media/content/sat-supercompilation/add-1-2.png" width="400px">
 </div>
 
 However, to think of a supercompiler as of a mere expression evaluator is a grave mistake. Let us consider what happens when it encounters a _variable_ that does not stand for some concrete expression. For example, let the task be `add(S(S(Z)), b)` with the same definition of `add`, where `b` is understood as "any" expression:
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/add-2-b.png" width="400px">
+   <img src="../media/content/sat-supercompilation/add-2-b.png" width="400px">
 </div>
 
 It _just_ works!
@@ -87,7 +87,7 @@ A supercompiler saw the variable `b` when trying to reduce `S(S(add(Z, b)))`, an
 Now consider what happens if there is a need to _pattern-match_ on an unknown variable. In this case, we cannot just proceed with "direct" computation since there are several possibilities of the form the variable may take. Suppose that the task is `add(a, 2)` [^naturals] with the same function `add`. What a supercompiler does is that it _analyze_ the expression `add(a, 2)` according to all the possibilities of `a`, which are either `Z` or `S(v1)`, where `v1` is some fresh variable identifier. The situation looks like this:
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/add-a-2.png" width="600px">
+   <img src="../media/content/sat-supercompilation/add-a-2.png" width="600px">
 </div>
 
 A supercompiler has built an (incomplete) _process tree_ that describes the execution of `add(a, 2)` in a general sense. In the first branch, `a` is substituted for `Z` according to the first rule of `add`; in the second branch, `a` is substituted for `S(v1)` according to the second rule of `add`. The resulting two nodes are labelled with expressions that resulted in reducing a particular substitution of the parent expression.
@@ -95,13 +95,13 @@ A supercompiler has built an (incomplete) _process tree_ that describes the exec
 However, the supercompilation is not complete yet: there is still a node labelled as `S(add(v1, 2))`. A supercompiler decides to _decompose_ it, meaning to move `add(v1, 2)` out of `S(...)` in the following way:
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/add-a-2-decompose.png" width="600px">
+   <img src="../media/content/sat-supercompilation/add-a-2-decompose.png" width="600px">
 </div>
 
 After that, if we proceed with supercompiling `add(v1, 2)`, we will eventually arrive at the initial expression `add(a, 2)`. This is because the expressions `add(v1, 2)` and `add(a, 2)` are _alpha equivalent_, meaning that they only differ in the names of variables. A supercompiler should be smart enough to detect this situation of alpha equivalence and, instead of continuing infinite supercompilation, just draw a back arrow from `add(v1, 2)` to the initial node as depicted below:
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/add-a-2-loop.png" width="600px">
+   <img src="../media/content/sat-supercompilation/add-a-2-loop.png" width="600px">
 </div>
 
 Hooray, the supercompilation of `add(a, 2)` is now complete!
@@ -198,7 +198,7 @@ That being said, a [sufficiently smart supercompiler] can transform a two-pass l
 [sufficiently smart supercompiler]: https://twitter.com/hirrolot/status/1741049231656280289
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/list-fusion.jpeg">
+   <img src="../media/content/sat-supercompilation/list-fusion.jpeg">
 </div>
 
 A similar example can be found in _"Rethinking Supercompilation"_ by Neil Mitchell [^rethinking-supercomp] and in [^supercompiler-concept] (section 6, _"Examples of supercompilation"_).
@@ -232,7 +232,7 @@ $$
 Then `OR(x, OR(y, OR(NOT z, F)))` would correspond to "x OR y OR NOT z":
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/if-x-y-not-z.png" width="550px">
+   <img src="../media/content/sat-supercompilation/if-x-y-not-z.png" width="550px">
 </div>
 
 Now consider the encoding of a conjunction of clauses [^and-blowup]:
@@ -248,7 +248,7 @@ $$
 Then `AND(OR(x, F), AND(OR(NOT y, F), T))` would correspond to "x AND NOT y":
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/x-and-not-y.png" width="550px">
+   <img src="../media/content/sat-supercompilation/x-and-not-y.png" width="550px">
 </div>
 
 Is the formula satisfiable? Yes, because we can assign `x` to `T` and `y` to `F`.
@@ -256,13 +256,13 @@ Is the formula satisfiable? Yes, because we can assign `x` to `T` and `y` to `F`
 Now consider the formula `AND(OR(x, F), AND(OR(NOT x, F), T))`, which is equivalent to "x AND NOT x":
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/x-and-not-x.png" width="550px">
+   <img src="../media/content/sat-supercompilation/x-and-not-x.png" width="550px">
 </div>
 
 Is the formula satisfiable? To figure out, let us remove _dead paths_ from the formula:
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/if-x-f-f.png" width="550px">
+   <img src="../media/content/sat-supercompilation/if-x-f-f.png" width="550px">
 </div>
 
 We have replaced the lower `if x` node with its first child `F` because `x` was already assigned `T` in this path. Since there are no `T` leafs in the resulting tree, it is correct to say that the formula is unsatisfiable: with any value of `x` we will arrive at `F`.
@@ -270,13 +270,13 @@ We have replaced the lower `if x` node with its first child `F` because `x` was 
 One more example is `AND(OR(x, F), AND(OR(x, OR(y, F)), AND(OR(NOT x, F), T)))`, which is equivalent to "x AND (y OR z) AND NOT x":
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/if-last-example.png" width="600px">
+   <img src="../media/content/sat-supercompilation/if-last-example.png" width="600px">
 </div>
 
 After removing dead paths:
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/if-last-example-final.png" width="600px">
+   <img src="../media/content/sat-supercompilation/if-last-example-final.png" width="600px">
 </div>
 
 The general observation is that, after encoding a CNF formula as an if-tree and removing dead paths from it, if there is at least one `T` leaf, the initial formula is satisfiable; otherwise, the formula is unsatisfiable because there is no path from the root that will take us to `T`. Think about it for a moment.
@@ -290,13 +290,13 @@ _Positive supercompilation_ is a particular model of supercompilation that propa
 In this post, we only deal with positive supercompilation. Consider the schematic representation of the CNF formula “x AND NOT x” again:
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/x-and-not-x.png" width="550px">
+   <img src="../media/content/sat-supercompilation/x-and-not-x.png" width="550px">
 </div>
 
 Imagine that `if`, `T`, and `F` are SLL constructors, with `if` holding three arguments: two branches and a variable, which is `T` in the first branch and `F` in the second. If we analyze the uppermost `if x`, we will get the following "process tree" [^if-process-tree]:
 
 <div align="center">
-   <img src="../media/posts/sat-supercompilation/if-x-f-f.png" width="550px">
+   <img src="../media/content/sat-supercompilation/if-x-f-f.png" width="550px">
 </div>
 
 Supercompilation acted as a dead code eliminator! This is because `x=T` was propagated to the first branch of the uppermost `if x`, resulting in the elimination of the branch `T` of the innermost `if x`. The second uppermost branch remains unchanged.
