@@ -15,6 +15,11 @@
         "description": "Twitter"
     },
     {
+        "link": "https://www.reddit.com/user/type-in-type",
+        "img": "brand-reddit.svg",
+        "description": "Reddit"
+    },
+    {
         "link": "https://github.com/hirrolot",
         "img": "brand-github.svg",
         "description": "GitHub"
