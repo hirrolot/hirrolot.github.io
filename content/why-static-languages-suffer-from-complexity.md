@@ -21,7 +21,7 @@ references:
 
 <p class="discussions">[HN](https://news.ycombinator.com/item?id=29996240) · [r/rust](https://www.reddit.com/r/rust/comments/s7sgxq/why_static_languages_suffer_from_complexity/) · [r/ProgrammingLanguages](https://www.reddit.com/r/ProgrammingLanguages/comments/s7shox/why_static_languages_suffer_from_complexity/)</p>
 
-![](../media/why-static-languages-suffer-from-complexity/preview.jpg)
+![](../media/posts/why-static-languages-suffer-from-complexity/preview.jpg)
 
 People in the programming language design community strive to make their languages more expressive, with a strong type system, mainly to increase ergonomics by avoiding code duplication in final software; however, the more expressive their languages become, the more abruptly duplication penetrates the language itself.
 
@@ -167,7 +167,7 @@ However, sometimes we may want to apply type-level computation to ordinary `stru
 [`Generic`]: https://docs.rs/frunk/latest/frunk/generic/trait.Generic.html
 [DTOs]: https://en.wikipedia.org/wiki/Data_transfer_object
 
-![](../media/why-static-languages-suffer-from-complexity/rust-meme.png)
+![](../media/posts/why-static-languages-suffer-from-complexity/rust-meme.png)
 
 ## Sum type -- Tree
 
@@ -393,7 +393,7 @@ main = assert ((add one two) == three) $ pure ()
 
 ## Type-level logic reified
 
-![](../media/why-static-languages-suffer-from-complexity/chad-meme.png)
+![](../media/posts/why-static-languages-suffer-from-complexity/chad-meme.png)
 
 The purpose of this writeup is only to convey the intuition behind the statics-dynamics biformity and not to provide a formal proof -- for the latter, please refer to an awesome library called [`type-operators`] (by the same person who implemented Smallfuck on types). In essence, it is an algorithmic macro eDSL that boils down to type-level manipulation with traits: you can define algebraic data types and perform data manipulations on them similar to how you normally do in Rust, but in the end, the whole code will dwell on the type-level. For more details, see the [translation rules](https://github.com/sdleffler/type-operators-rs/blob/master/src/lib.rs) and an [excellent guide](https://github.com/sdleffler/type-operators-rs/blob/master/README.md) by the same author. Another noteworthy project is [Fortraith], which is a "compile-time compiler that compiles Forth to compile-time trait expressions":
 
@@ -559,7 +559,7 @@ BOOST_MPL_ASSERT_RELATION(
 </li>
 </ul>
 
-![](../media/why-static-languages-suffer-from-complexity/tmp-meme.png)
+![](../media/posts/why-static-languages-suffer-from-complexity/tmp-meme.png)
 
 Sometimes, software engineers find their languages too primitive to express their ideas even in dynamic code. But they do not give up:
 
@@ -584,7 +584,7 @@ Recalling the famous [Greenspun's tenth rule], such handmade metalanguages are t
 [Greenspun's tenth rule]: https://en.wikipedia.org/wiki/Greenspun%27s_tenth_rule
 [metalinguistic abstraction]: https://en.wikipedia.org/wiki/Metalinguistic_abstraction
 
-![](../media/whats-the-point-of-the-c-preprocessor-actually/2.jpg)
+![](../media/posts/whats-the-point-of-the-c-preprocessor-actually/2.jpg)
 
 This is woefully to say, but it seems that an "expressive" PL nowadays means "Hey there, I have seriously messed up with the number of features, but that is fine!"
 
@@ -722,7 +722,7 @@ Yeah, Idris detects the error and produces a type mismatch! This is basically ho
 [Will Crichton's attempt]: https://willcrichton.net/notes/type-safe-printf/
 [Zig]: https://ziglang.org/
 
-![](../media/why-static-languages-suffer-from-complexity/printf-meme.png)
+![](../media/posts/why-static-languages-suffer-from-complexity/printf-meme.png)
 
 I already anticipate the question: what is the problem of implementing `printf` with macros? After all, [`println!`] works just fine in Rust. The problem is macros. Think for yourself: why a programming language needs heavy-duty macros? Because we may want to extend it. Why may we want to extend it? Because a programming language does not fit our needs: we cannot express something using regular linguistic abstractions, and this is why we decide to extend the language with ad-hoc meta-abstractions. In the main section, I provided an argumentation why this approach sucks -- because a macro system has no clue about a language being manipulated; in fact, procedural macros in Rust is just a fancy name for the [M4 preprocessor]. You guys integrated M4 into your language. Of course, this is [better than external M4], but it is nevertheless a method of the 20'th century; proc. macros even cannot manipulate an [_abstract_ syntax tree], because [`syn::Item`], a common structure used to write proc. macros, is indeed known as a [_concrete_ syntax tree], or "parse tree". On the other hand, types are a natural part of a host language, and this is why if we can express a programmatic abstraction using types, we _reuse_ linguistic abstractions instead of resorting to ad-hoc machinery. Ideally, a programming language should have either no macros or only a lightweight form of syntax rewriting rules (like Scheme's [`extend-syntax`] or [syntax extensions] of Idris), in order to keep the language consistent and well-suited to solve expected tasks.
 
@@ -820,7 +820,7 @@ The only inconvenience I experienced during the development of `printf` is [mass
 [`@typeName`]: https://ziglang.org/documentation/master/#typeName
 [`@TypeOf`]: https://ziglang.org/documentation/master/#TypeOf
 
-![](../media/why-static-languages-suffer-from-complexity/types-meme.png)
+![](../media/posts/why-static-languages-suffer-from-complexity/types-meme.png)
 
 Everything is good except that Zig is a systems language. On [their official website], Zig is described as a "general-purpose programming language", but I can hardly agree with this statement. Yes, you can write virtually any software in Zig, but should you? My experience in maintaining high-level code in Rust and C99 says **NO**. The first reason is safety: if you make a systems language safe, you will make programmers deal with borrow checker and ownership (or equivalent) issues that have absolutely nothing to do with business logic (believe me, I know the pain); otherwise, if you choose the C-way manual memory management, you will make programmers debugging their code for long hours with the hope that `-fsanitize=address` would show something meaningful. Moreover, if you want to build new abstractions atop of pointers, you will end up with `&str`, `AsRef<str>`, `Borrow<str>`, `Box<str>`, and the similar. Come on, I just want a UTF-8 string; most of the time, I do not really care whether it is one of those alternatives.
 
