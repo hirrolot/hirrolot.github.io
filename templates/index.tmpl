@@ -46,7 +46,7 @@
     {{range .Posts}}
         <div class="post-link">
             <a href="{{$.OutputDir}}/{{.Name}}.html">{{.Title}}</a>
-            {{if .RedirectTo}}<img src="media/external-link.svg" class="redirect-icon" />{{end}}
+            {{if .RedirectTo}}<img src="media/svg/external-link.svg" class="redirect-icon" />{{end}}
             <br>
             <span class="post-date">{{.Date}}</span>
         </div>

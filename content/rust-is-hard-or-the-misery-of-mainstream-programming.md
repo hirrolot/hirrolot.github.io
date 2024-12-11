@@ -5,7 +5,7 @@
 [HN]: https://news.ycombinator.com/item?id=31601040
 [r/rust]: https://www.reddit.com/r/rust/comments/v3cktw/rust_is_hard_or_the_misery_of_mainstream/
 
-![](../media/rust-is-hard-or-the-misery-of-mainstream-programming/rustaceans-meme.jpeg)
+![](../media/posts/rust-is-hard-or-the-misery-of-mainstream-programming/rustaceans-meme.jpeg)
 
 When you use Rust, it is sometimes outright preposterous how much knowledge of language, and how much of programming ingenuity and curiosity you need in order to accomplish the most trivial things. When you feel particularly desperate, you go to [rust/issues] and search for a solution for your problem. Suddenly, you find an issue with an explanation that it is theoretically impossible to design your API in this way, owing to some subtle language bug. The issue is <span style="background-color: rgb(35, 134, 54); color: white; display: inline-block; padding: 5px 12px; border-radius: 28px; font-size: 16px; font-family: sans-serif;"><svg style="vertical-align: middle; margin-bottom: 3px;" height="16" class="octicon octicon-issue-opened" viewBox="0 0 16 16" version="1.1" width="16" aria-hidden="true"><path fill="#FFFFFF" d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path><path fill="#FFFFFF" fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"></path></svg> Open</span> and dated Apr 5, 2017.
 
@@ -355,11 +355,11 @@ error[E0308]: mismatched types
 
 (In a real-world scenario, the above error would probably be [20x bigger].)
 
-[20x bigger]: ../media/rust-is-hard-or-the-misery-of-mainstream-programming/teloxide-error.txt
+[20x bigger]: ../media/posts/rust-is-hard-or-the-misery-of-mainstream-programming/teloxide-error.txt
 
 ## Third try: Using Arc
 
-<img src="../media/rust-is-hard-or-the-misery-of-mainstream-programming/arc-meme.jpeg" width="580px" />
+<img src="../media/posts/rust-is-hard-or-the-misery-of-mainstream-programming/arc-meme.jpeg" width="580px" />
 
 When I was novice in Rust, I used to think that references are simpler than smart pointers. Now I am using `Rc`/`Arc` almost everywhere where using lifetimes causes too much pain and performance is not a big deal. Believe or not, all of the aforementioned problems were caused by that single lifetime in `type Handler`, `'a`.
 
@@ -521,7 +521,7 @@ So if I "figured out it all", why should not I develop a sublime version of Rust
 
 If you still want to create a PL of the future, I wish you good luck and strong mental health. You are endlessly courageous and hopelessly romantic.
 
-![](../media/rust-is-hard-or-the-misery-of-mainstream-programming/sad-keanu.jpeg)
+![](../media/posts/rust-is-hard-or-the-misery-of-mainstream-programming/sad-keanu.jpeg)
 
 ## Related ideas
 
