@@ -349,14 +349,14 @@ usually called a <em>task</em>.</p><p>Let the task for a hypothetic supercompile
 simple as sequential reduction of the initial expression to the target
 expression <code>S(S(S(Z)))</code>, according to the rules of
 <code>add</code>:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/add-1-2.png" width="400px"></p>
+<p><img src="../media/content/sat-supercompilation/add-1-2.png" width="400px"></p>
 </div><p>However, to think of a supercompiler as of a mere expression
 evaluator is a grave mistake. Let us consider what happens when it
 encounters a <em>variable</em> that does not stand for some concrete
 expression. For example, let the task be <code>add(S(S(Z)), b)</code>
 with the same definition of <code>add</code>, where <code>b</code> is
 understood as “any” expression:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/add-2-b.png" width="400px"></p>
+<p><img src="../media/content/sat-supercompilation/add-2-b.png" width="400px"></p>
 </div><p>It <em>just</em> works!</p><p>A supercompiler saw the variable <code>b</code> when trying to reduce
 <code>S(S(add(Z, b)))</code>, and then it just substituted
 <code>y</code> (from the rule <code>add(Z, y)</code>) for this
@@ -373,7 +373,7 @@ the expression <code>add(a, 2)</code> according to all the possibilities
 of <code>a</code>, which are either <code>Z</code> or
 <code>S(v1)</code>, where <code>v1</code> is some fresh variable
 identifier. The situation looks like this:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/add-a-2.png" width="600px"></p>
+<p><img src="../media/content/sat-supercompilation/add-a-2.png" width="600px"></p>
 </div><p>A supercompiler has built an (incomplete) <em>process tree</em> that
 describes the execution of <code>add(a, 2)</code> in a general sense. In
 the first branch, <code>a</code> is substituted for <code>Z</code>
@@ -385,7 +385,7 @@ the parent expression.</p><p>However, the supercompilation is not complete yet: 
 node labelled as <code>S(add(v1, 2))</code>. A supercompiler decides to
 <em>decompose</em> it, meaning to move <code>add(v1, 2)</code> out of
 <code>S(...)</code> in the following way:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/add-a-2-decompose.png" width="600px"></p>
+<p><img src="../media/content/sat-supercompilation/add-a-2-decompose.png" width="600px"></p>
 </div><p>After that, if we proceed with supercompiling
 <code>add(v1, 2)</code>, we will eventually arrive at the initial
 expression <code>add(a, 2)</code>. This is because the expressions
@@ -395,7 +395,7 @@ variables. A supercompiler should be smart enough to detect this
 situation of alpha equivalence and, instead of continuing infinite
 supercompilation, just draw a back arrow from <code>add(v1, 2)</code> to
 the initial node as depicted below:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/add-a-2-loop.png" width="600px"></p>
+<p><img src="../media/content/sat-supercompilation/add-a-2-loop.png" width="600px"></p>
 </div><p>Hooray, the supercompilation of <code>add(a, 2)</code> is now
 complete!</p><p>What is left is to perform <em>residualization</em> – the process of
 converting a process tree to an SLL task, a <em>self-sufficient
@@ -483,7 +483,7 @@ variables, and so on.</p>
 </blockquote><p><br></p><p>That being said, a <a href="https://twitter.com/hirrolot/status/1741049231656280289">sufficiently
 smart supercompiler</a> can transform a two-pass list mapping into a
 single-pass algorithm, essentially performing <em>list fusion</em>:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/list-fusion.jpeg"></p>
+<p><img src="../media/content/sat-supercompilation/list-fusion.jpeg"></p>
 </div><p>A similar example can be found in <em>“Rethinking
 Supercompilation”</em> by Neil Mitchell <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> and
 in <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> (section 6, <em>“Examples of
@@ -510,7 +510,7 @@ OR(NOT \ x, \dots) &amp;= If (x, \dots, T);
 \end{aligned}
 \]</span></p><p>Then <code>OR(x, OR(y, OR(NOT z, F)))</code> would correspond to “x
 OR y OR NOT z”:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/if-x-y-not-z.png" width="550px"></p>
+<p><img src="../media/content/sat-supercompilation/if-x-y-not-z.png" width="550px"></p>
 </div><p>Now consider the encoding of a conjunction of clauses <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a>:</p><p><span class="math display">\[
 \begin{aligned}
 AND(If(x, m, n), \dots) &amp;= If(x, AND(m, \dots), AND(n, \dots)); \\
@@ -519,15 +519,15 @@ AND(F, \dots) &amp;= F;
 \end{aligned}
 \]</span></p><p>Then <code>AND(OR(x, F), AND(OR(NOT y, F), T))</code> would
 correspond to “x AND NOT y”:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/x-and-not-y.png" width="550px"></p>
+<p><img src="../media/content/sat-supercompilation/x-and-not-y.png" width="550px"></p>
 </div><p>Is the formula satisfiable? Yes, because we can assign <code>x</code>
 to <code>T</code> and <code>y</code> to <code>F</code>.</p><p>Now consider the formula
 <code>AND(OR(x, F), AND(OR(NOT x, F), T))</code>, which is equivalent to
 “x AND NOT x”:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/x-and-not-x.png" width="550px"></p>
+<p><img src="../media/content/sat-supercompilation/x-and-not-x.png" width="550px"></p>
 </div><p>Is the formula satisfiable? To figure out, let us remove <em>dead
 paths</em> from the formula:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/if-x-f-f.png" width="550px"></p>
+<p><img src="../media/content/sat-supercompilation/if-x-f-f.png" width="550px"></p>
 </div><p>We have replaced the lower <code>if x</code> node with its first
 child <code>F</code> because <code>x</code> was already assigned
 <code>T</code> in this path. Since there are no <code>T</code> leafs in
@@ -536,9 +536,9 @@ unsatisfiable: with any value of <code>x</code> we will arrive at
 <code>F</code>.</p><p>One more example is
 <code>AND(OR(x, F), AND(OR(x, OR(y, F)), AND(OR(NOT x, F), T)))</code>,
 which is equivalent to “x AND (y OR z) AND NOT x”:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/if-last-example.png" width="600px"></p>
+<p><img src="../media/content/sat-supercompilation/if-last-example.png" width="600px"></p>
 </div><p>After removing dead paths:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/if-last-example-final.png" width="600px"></p>
+<p><img src="../media/content/sat-supercompilation/if-last-example-final.png" width="600px"></p>
 </div><p>The general observation is that, after encoding a CNF formula as an
 if-tree and removing dead paths from it, if there is at least one
 <code>T</code> leaf, the initial formula is satisfiable; otherwise, the
@@ -555,13 +555,13 @@ values); a typical example is the “default” case in a pattern-matching
 construction. A <em>perfect supercompiler</em> is a supercompiler that
 is able to propagate both positive and negative information.</p><p>In this post, we only deal with positive supercompilation. Consider
 the schematic representation of the CNF formula “x AND NOT x” again:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/x-and-not-x.png" width="550px"></p>
+<p><img src="../media/content/sat-supercompilation/x-and-not-x.png" width="550px"></p>
 </div><p>Imagine that <code>if</code>, <code>T</code>, and <code>F</code> are
 SLL constructors, with <code>if</code> holding three arguments: two
 branches and a variable, which is <code>T</code> in the first branch and
 <code>F</code> in the second. If we analyze the uppermost
 <code>if x</code>, we will get the following “process tree” <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a>:</p><div data-align="center">
-<p><img src="../media/posts/sat-supercompilation/if-x-f-f.png" width="550px"></p>
+<p><img src="../media/content/sat-supercompilation/if-x-f-f.png" width="550px"></p>
 </div><p>Supercompilation acted as a dead code eliminator! This is because
 <code>x=T</code> was propagated to the first branch of the uppermost
 <code>if x</code>, resulting in the elimination of the branch

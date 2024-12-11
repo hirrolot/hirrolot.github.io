@@ -122,7 +122,7 @@
 <a href="https://news.ycombinator.com/item?id=29996240">HN</a> · <a href="https://www.reddit.com/r/rust/comments/s7sgxq/why_static_languages_suffer_from_complexity/">r/rust</a>
 · <a href="https://www.reddit.com/r/ProgrammingLanguages/comments/s7shox/why_static_languages_suffer_from_complexity/">r/ProgrammingLanguages</a>
 </p>
-<p><img src="../media/posts/why-static-languages-suffer-from-complexity/preview.jpg"></p>
+<p><img src="../media/content/why-static-languages-suffer-from-complexity/preview.jpg"></p>
 <p>People in the programming language design community strive to make
 their languages more expressive, with a strong type system, mainly to
 increase ergonomics by avoiding code duplication in final software;
@@ -439,7 +439,7 @@ trait for it; it has the <code>type Repr</code> associated type, which,
 when implemented, equals to some form of a manipulatable heterogenous
 list. Still, all other types (well, transparent ones, such as <a href="https://en.wikipedia.org/wiki/Data_transfer_object">DTOs</a>) that
 do not have this derive macro, are left unexaminable, owing to the
-aforementioned limitations of Rust.</p><p><img src="../media/posts/why-static-languages-suffer-from-complexity/rust-meme.png"></p><a class="header-link" href="#sum-type-tree"><h2 id="sum-type-tree">Sum type – Tree</h2></a><p>One may find sum types good to represent an AST node (<a href="https://play.rust-lang.org/?version=stable&amp;mode=debug&amp;edition=2021&amp;gist=e5031b0c2888fe9ea336789ee1cdf049">playground</a>):</p><div class="code-annotation-container"><p class="code-annotation">
+aforementioned limitations of Rust.</p><p><img src="../media/content/why-static-languages-suffer-from-complexity/rust-meme.png"></p><a class="header-link" href="#sum-type-tree"><h2 id="sum-type-tree">Sum type – Tree</h2></a><p>One may find sum types good to represent an AST node (<a href="https://play.rust-lang.org/?version=stable&amp;mode=debug&amp;edition=2021&amp;gist=e5031b0c2888fe9ea336789ee1cdf049">playground</a>):</p><div class="code-annotation-container"><p class="code-annotation">
 <code>ast-static.rs</code>
 </p></div><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource rust numberLines"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">use</span> <span class="pp">std::ops::</span><span class="bu">Deref</span><span class="op">;</span></span>
 <span id="cb6-2"><a href="#cb6-2"></a></span>
@@ -632,7 +632,7 @@ matching case looks like a separate function definition:</p><div class="code-ann
 <span id="cb12-11"><a href="#cb12-11"></a>three <span class="ot">=</span> <span class="dt">S</span> two</span>
 <span id="cb12-12"><a href="#cb12-12"></a></span>
 <span id="cb12-13"><a href="#cb12-13"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
-<span id="cb12-14"><a href="#cb12-14"></a>main <span class="ot">=</span> assert ((add one two) <span class="op">==</span> three) <span class="op">$</span> <span class="fu">pure</span> ()</span></code></pre></div><a class="header-link" href="#type-level-logic-reified"><h2 id="type-level-logic-reified">Type-level logic reified</h2></a><p><img src="../media/posts/why-static-languages-suffer-from-complexity/chad-meme.png"></p><p>The purpose of this writeup is only to convey the intuition behind
+<span id="cb12-14"><a href="#cb12-14"></a>main <span class="ot">=</span> assert ((add one two) <span class="op">==</span> three) <span class="op">$</span> <span class="fu">pure</span> ()</span></code></pre></div><a class="header-link" href="#type-level-logic-reified"><h2 id="type-level-logic-reified">Type-level logic reified</h2></a><p><img src="../media/content/why-static-languages-suffer-from-complexity/chad-meme.png"></p><p>The purpose of this writeup is only to convey the intuition behind
 the statics-dynamics biformity and not to provide a formal proof – for
 the latter, please refer to an awesome library called <a href="https://crates.io/crates/type-operators"><code>type-operators</code></a>
 (by the same person who implemented Smallfuck on types). In essence, it
@@ -806,7 +806,7 @@ The best thing you could do is to write a macro that does the dirty job
 for you, but it would only be syntax sugar – you would anyway see hordes
 of compile-time errors with the aforementioned traits.</p>
 </li>
-</ul><p><img src="../media/posts/why-static-languages-suffer-from-complexity/tmp-meme.png"></p><p>Sometimes, software engineers find their languages too primitive to
+</ul><p><img src="../media/content/why-static-languages-suffer-from-complexity/tmp-meme.png"></p><p>Sometimes, software engineers find their languages too primitive to
 express their ideas even in dynamic code. But they do not give up:</p><ul>
 <li>[<strong>Golang</strong>] <a href="https://github.com/kubernetes/kubernetes">Kubernetes</a>, one of
 the largest codebases in Golang, has its own <a href="https://medium.com/@arschles/go-experience-report-generics-in-kubernetes-25da87430301">object-oriented
@@ -843,7 +843,7 @@ making it harder to dig into. Not only reasoning is impaired but also
 compiler-developer interaction: have you ever tried to use a
 sophisticated type or macro API? If yes, then you should be perfectly
 acquainted with inscrutable compiler diagnostics, which can be
-summarised in the following screenshot <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>:</p><p><img src="../media/posts/whats-the-point-of-the-c-preprocessor-actually/2.jpg"></p><p>This is woefully to say, but it seems that an “expressive” PL
+summarised in the following screenshot <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>:</p><p><img src="../media/content/whats-the-point-of-the-c-preprocessor-actually/2.jpg"></p><p>This is woefully to say, but it seems that an “expressive” PL
 nowadays means “Hey there, I have seriously messed up with the number of
 features, but that is fine!”</p><p>Finally, a word has to be said about metaprogramming in a host
 language. With such templating systems as <a href="https://wiki.haskell.org/A_practical_Template_Haskell_Tutorial">Template
@@ -1021,7 +1021,7 @@ language, but in Idris, it is indeed the same thing – this is why we can
 freely define type-level functions as regular functions returning a
 <code>Type</code> and invoke them later in type signatures. Moreover,
 because Idris is dependently typed, you can even compute a type based on
-some run-time argument, which is impossible in such languages as <a href="https://ziglang.org/">Zig</a>.</p><p><img src="../media/posts/why-static-languages-suffer-from-complexity/printf-meme.png"></p><p>I already anticipate the question: what is the problem of
+some run-time argument, which is impossible in such languages as <a href="https://ziglang.org/">Zig</a>.</p><p><img src="../media/content/why-static-languages-suffer-from-complexity/printf-meme.png"></p><p>I already anticipate the question: what is the problem of
 implementing <code>printf</code> with macros? After all, <a href="https://doc.rust-lang.org/std/macro.println.html"><code>println!</code></a>
 works just fine in Rust. The problem is macros. Think for yourself: why
 a programming language needs heavy-duty macros? Because we may want to
@@ -1148,7 +1148,7 @@ We can even perform type reflection through the <a href="https://ziglang.org/doc
 and <a href="https://ziglang.org/documentation/master/#TypeOf"><code>@TypeOf</code></a>
 built-ins! Yes, we can no longer depend on run-time values, but if you
 do not need a theorem prover, probably full-blown dependent types are a
-bit of overkill.</p><p><img src="../media/posts/why-static-languages-suffer-from-complexity/types-meme.png"></p><p>Everything is good except that Zig is a systems language. On <a href="https://ziglang.org/">their official website</a>, Zig is described
+bit of overkill.</p><p><img src="../media/content/why-static-languages-suffer-from-complexity/types-meme.png"></p><p>Everything is good except that Zig is a systems language. On <a href="https://ziglang.org/">their official website</a>, Zig is described
 as a “general-purpose programming language”, but I can hardly agree with
 this statement. Yes, you can write virtually any software in Zig, but
 should you? My experience in maintaining high-level code in Rust and C99

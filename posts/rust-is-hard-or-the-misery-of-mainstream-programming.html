@@ -104,7 +104,7 @@ Programming</h1></a>
 <a href="https://news.ycombinator.com/item?id=31601040">HN</a> · <a href="https://www.reddit.com/r/rust/comments/v3cktw/rust_is_hard_or_the_misery_of_mainstream/">r/rust</a>
 · <a href="https://www.reddit.com/r/ProgrammingLanguages/comments/v3clru/rust_is_hard_or_the_misery_of_mainstream/">r/ProgrammingLanguages</a>
 </p>
-<p><img src="../media/posts/rust-is-hard-or-the-misery-of-mainstream-programming/rustaceans-meme.jpeg"></p>
+<p><img src="../media/content/rust-is-hard-or-the-misery-of-mainstream-programming/rustaceans-meme.jpeg"></p>
 <p>When you use Rust, it is sometimes outright preposterous how much
 knowledge of language, and how much of programming ingenuity and
 curiosity you need in order to accomplish the most trivial things. When
@@ -525,8 +525,8 @@ compilation output:</p><div class="sourceCode" id="cb16"><pre class="sourceCode 
 <span id="cb16-7"><a href="#cb16-7"></a>    |         expected struct `Dispatcher`, found `()`</span>
 <span id="cb16-8"><a href="#cb16-8"></a>    |</span>
 <span id="cb16-9"><a href="#cb16-9"></a>    = note: expected struct `Dispatcher&lt;for&lt;'_&gt; fn(&amp;Update) -&gt; impl futures::Future&lt;Output = ()&gt; {dbg_update0}, Dispatcher&lt;for&lt;'_&gt; fn(&amp;Update) -&gt; impl futures::Future&lt;Output = ()&gt; {dbg_update1}, Dispatcher&lt;for&lt;'_&gt; fn(&amp;Update) -&gt; impl futures::Future&lt;Output = ()&gt; {dbg_update2}, Dispatcher&lt;for&lt;'_&gt; fn(&amp;Update) -&gt; impl futures::Future&lt;Output = ()&gt; {dbg_update3}, Dispatcher&lt;for&lt;'_&gt; fn(&amp;Update) -&gt; impl futures::Future&lt;Output = ()&gt; {dbg_update4}, Dispatcher&lt;for&lt;'_&gt; fn(&amp;Update) -&gt; impl futures::Future&lt;Output = ()&gt; {dbg_update5}, Dispatcher&lt;for&lt;'_&gt; fn(&amp;Update) -&gt; impl futures::Future&lt;Output = ()&gt; {dbg_update6}, Dispatcher&lt;for&lt;'_&gt; fn(&amp;Update) -&gt; impl futures::Future&lt;Output = ()&gt; {dbg_update7}, Dispatcher&lt;for&lt;'_&gt; fn(&amp;Update) -&gt; impl futures::Future&lt;Output = ()&gt; {dbg_update8}, Dispatcher&lt;for&lt;'_&gt; fn(&amp;Update) -&gt; impl futures::Future&lt;Output = ()&gt; {dbg_update9}, DispatcherEnd&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;`</span>
-<span id="cb16-10"><a href="#cb16-10"></a>            found unit type `()`</span></code></pre></div><p>(In a real-world scenario, the above error would probably be <a href="../media/posts/rust-is-hard-or-the-misery-of-mainstream-programming/teloxide-error.txt">20x
-bigger</a>.)</p><a class="header-link" href="#third-try-using-arc"><h2 id="third-try-using-arc">Third try: Using Arc</h2></a><p><img src="../media/posts/rust-is-hard-or-the-misery-of-mainstream-programming/arc-meme.jpeg" width="580px"></p><p>When I was novice in Rust, I used to think that references are
+<span id="cb16-10"><a href="#cb16-10"></a>            found unit type `()`</span></code></pre></div><p>(In a real-world scenario, the above error would probably be <a href="../media/content/rust-is-hard-or-the-misery-of-mainstream-programming/teloxide-error.txt">20x
+bigger</a>.)</p><a class="header-link" href="#third-try-using-arc"><h2 id="third-try-using-arc">Third try: Using Arc</h2></a><p><img src="../media/content/rust-is-hard-or-the-misery-of-mainstream-programming/arc-meme.jpeg" width="580px"></p><p>When I was novice in Rust, I used to think that references are
 simpler than smart pointers. Now I am using
 <code>Rc</code>/<code>Arc</code> almost everywhere where using lifetimes
 causes too much pain and performance is not a big deal. Believe or not,
@@ -728,7 +728,7 @@ Accidentally targeting an IT trend of the future? Again, the reasons are
 rather social. Harsh reality: in life, sometimes hope plays a much more
 vital role than all of your skills and self-dedication.</p><p>If you still want to create a PL of the future, I wish you good luck
 and strong mental health. You are endlessly courageous and hopelessly
-romantic.</p><p><img src="../media/posts/rust-is-hard-or-the-misery-of-mainstream-programming/sad-keanu.jpeg"></p><a class="header-link" href="#related-ideas"><h2 id="related-ideas">Related ideas</h2></a><ul>
+romantic.</p><p><img src="../media/content/rust-is-hard-or-the-misery-of-mainstream-programming/sad-keanu.jpeg"></p><a class="header-link" href="#related-ideas"><h2 id="related-ideas">Related ideas</h2></a><ul>
 <li><em>“<a href="https://arxiv.org/pdf/2110.01098.pdf">Garbage
 Collection Makes Rust Easier to Use: A Randomized Controlled Trial of
 the Bronze Garbage Collector</a>”</em></li>
