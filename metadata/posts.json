@@ -1,5 +1,11 @@
 [
     {
+        "name": "CoC-60",
+        "title": "Calculus of Constructions in 60 Lines of Ocaml",
+        "date": "Apr 22, 2025",
+        "redirect-to": "https://gist.github.com/hirrolot/c89baa9b83c7da9b87146be88e560351"
+    },
+    {
         "name": "sat-supercompilation",
         "title": "Solving SAT via Positive Supercompilation",
         "date": "Feb 1, 2024"
