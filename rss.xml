@@ -5,6 +5,11 @@
         <description>My blog about programming and computer science.</description>
         <language>en-us</language>
         <item>
+            <title>Calculus of Constructions in 60 Lines of Ocaml</title>
+            <guid>https://hirrolot.github.io/posts/CoC-60.html</guid>
+            <pubDate>Thu, 23 Apr 2025 00:00:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Solving SAT via Positive Supercompilation</title>
             <guid>https://hirrolot.github.io/posts/sat-supercompilation.html</guid>
             <pubDate>Thu, 1 Feb 2024 00:00:00 GMT</pubDate>
