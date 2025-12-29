@@ -1,5 +1,10 @@
 [
     {
+        "name": "confessiones-in-russian-1",
+        "title": "\"Confessiones\" на Русском Языке, Книга Первая",
+        "date": "Dec 29, 2025"
+    },
+    {
         "name": "sat-supercompilation",
         "title": "Solving SAT via Positive Supercompilation",
         "date": "Feb 1, 2024"
