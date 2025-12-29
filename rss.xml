@@ -5,6 +5,11 @@
         <description>My blog about programming and computer science.</description>
         <language>en-us</language>
         <item>
+            <title>"Confessiones" на Русском Языке, Книга Первая</title>
+            <guid>https://hirrolot.github.io/posts/confessiones-in-russian-1.html</guid>
+            <pubDate>Mon, 29 Dec 2025 00:00:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Solving SAT via Positive Supercompilation</title>
             <guid>https://hirrolot.github.io/posts/sat-supercompilation.html</guid>
             <pubDate>Thu, 1 Feb 2024 00:00:00 GMT</pubDate>
