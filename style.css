@@ -70,6 +70,14 @@ img:not(.redirect-icon, .contact-img, .selfie) {
     .post-link {
         background-color: transparent !important;
     }
+
+    [style*="text-align: justify"] {
+        text-align: left !important;
+    }
+
+    body {
+        font-size: 18px !important;
+    }
 }
 
 @media only screen and (min-width: 1000px) {
