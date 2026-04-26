@@ -5,6 +5,11 @@
         <description>My blog about programming and computer science.</description>
         <language>en-us</language>
         <item>
+            <title>"Confessiones" на Русском Языке, Книга Третья</title>
+            <guid>https://hirrolot.github.io/posts/confessiones-in-russian-3.html</guid>
+            <pubDate>Sun, 26 Apr 2026 00:00:00 GMT</pubDate>
+        </item>
+        <item>
             <title>"Confessiones" на Русском Языке, Книга Вторая</title>
             <guid>https://hirrolot.github.io/posts/confessiones-in-russian-2.html</guid>
             <pubDate>Sun, 12 Apr 2026 00:00:00 GMT</pubDate>
