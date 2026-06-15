@@ -1,4 +1,4 @@
-window.addEventListener("load", function (event) {
+window.addEventListener("DOMContentLoaded", function (event) {
     genAuthorEmoji();
 });
 
