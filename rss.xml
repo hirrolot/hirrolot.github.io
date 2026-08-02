@@ -5,6 +5,11 @@
         <description>My blog about programming and computer science.</description>
         <language>en-us</language>
         <item>
+            <title>"Confessiones" на Русском Языке, Книга Четвёртая</title>
+            <guid>https://hirrolot.github.io/posts/confessiones-in-russian-4.html</guid>
+            <pubDate>Sun, 2 Aug 2026 00:00:00 GMT</pubDate>
+        </item>
+        <item>
             <title>"Confessiones" на Русском Языке, Книга Третья</title>
             <guid>https://hirrolot.github.io/posts/confessiones-in-russian-3.html</guid>
             <pubDate>Sun, 26 Apr 2026 00:00:00 GMT</pubDate>
@@ -41,7 +46,8 @@
         </item>
         <item>
             <title>How to Implement Dependent Types in 80 Lines of Code</title>
-            <guid>https://hirrolot.github.io/posts/how-to-implement-dependent-types-in-80-lines-of-code.html</guid>
+            <guid>
+                https://hirrolot.github.io/posts/how-to-implement-dependent-types-in-80-lines-of-code.html</guid>
             <pubDate>Sat, 25 Feb 2023 00:00:00 GMT</pubDate>
         </item>
         <item>
@@ -51,7 +57,8 @@
         </item>
         <item>
             <title>Rust Is Hard, Or: The Misery of Mainstream Programming</title>
-            <guid>https://hirrolot.github.io/posts/rust-is-hard-or-the-misery-of-mainstream-programming.html</guid>
+            <guid>
+                https://hirrolot.github.io/posts/rust-is-hard-or-the-misery-of-mainstream-programming.html</guid>
             <pubDate>Thu, 2 Jun 2022 00:00:00 GMT</pubDate>
         </item>
         <item>
@@ -66,7 +73,8 @@
         </item>
         <item>
             <title>Macros on Steroids, Or: How Can Pure C Benefit From Metaprogramming</title>
-            <guid>https://hirrolot.github.io/posts/macros-on-steroids-or-how-can-pure-c-benefit-from-metaprogramming.html</guid>
+            <guid>
+                https://hirrolot.github.io/posts/macros-on-steroids-or-how-can-pure-c-benefit-from-metaprogramming.html</guid>
             <pubDate>Thu, 22 Jul 2021 00:00:00 GMT</pubDate>
         </item>
         <item>
@@ -81,12 +89,14 @@
         </item>
         <item>
             <title>Expression-Oriented Programming in C: The FMT Macro</title>
-            <guid>https://hirrolot.github.io/posts/expression-oriented-programming-in-c-the-fmt-macro.html</guid>
+            <guid>
+                https://hirrolot.github.io/posts/expression-oriented-programming-in-c-the-fmt-macro.html</guid>
             <pubDate>Fri, 14 May 2021 00:00:00 GMT</pubDate>
         </item>
         <item>
             <title>Compile-Time Introspection of Sum Types in Pure C99</title>
-            <guid>https://hirrolot.github.io/posts/compile-time-introspection-of-sum-types-in-pure-c99.html</guid>
+            <guid>
+                https://hirrolot.github.io/posts/compile-time-introspection-of-sum-types-in-pure-c99.html</guid>
             <pubDate>Sun, 25 Apr 2021 00:00:00 GMT</pubDate>
         </item>
         <item>
