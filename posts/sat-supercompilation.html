@@ -1,16 +1,32 @@
-<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang=""><head>
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head>
   <meta charset="utf-8">
-  <meta name="generator" content="pandoc">
+  <meta name="generator" content="pandoc 3.11">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <meta name="author" content="hirrolot">
   <title>Solving SAT via Positive Supercompilation</title>
   <style>
-    code{white-space: pre-wrap;}
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    ul.task-list{list-style: none;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -49,7 +65,7 @@
     code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
     code span.at { color: #7d9029; } /* Attribute */
     code span.bn { color: #40a070; } /* BaseN */
-    code span.bu { } /* BuiltIn */
+    code span.bu { color: #008000; } /* BuiltIn */
     code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
     code span.ch { color: #4070a0; } /* Char */
     code span.cn { color: #880000; } /* Constant */
@@ -62,7 +78,7 @@
     code span.ex { } /* Extension */
     code span.fl { color: #40a070; } /* Float */
     code span.fu { color: #06287e; } /* Function */
-    code span.im { } /* Import */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
     code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
     code span.kw { color: #007020; font-weight: bold; } /* Keyword */
     code span.op { color: #666666; } /* Operator */
@@ -88,10 +104,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&amp;display=swap" rel="stylesheet">
   <link rel="shortcut icon" href="../myself.png" type="image/x-icon">
   <script src="../script.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
 </head>
 <body>
 <header id="title-block-header">
@@ -129,13 +142,13 @@ SAT solver.</p>
 <p>Without further ado, let me begin.</p>
 </div><nav id="TOC" role="doc-toc" style="display: block;"><h4 class="toc-title">Table of Contents</h4>
 <ul>
-<li><a href="#supercompilation-by-example">Supercompilation by
+<li><a href="#supercompilation-by-example" id="toc-supercompilation-by-example">Supercompilation by
 example</a></li>
-<li><a href="#sat-and-dead-code-elimination">SAT and dead code
+<li><a href="#sat-and-dead-code-elimination" id="toc-sat-and-dead-code-elimination">SAT and dead code
 elimination</a></li>
-<li><a href="#supercompilation-of-sat">Supercompilation of SAT</a></li>
-<li><a href="#final-words">Final words</a></li>
-<li><a href="#references">References</a></li>
+<li><a href="#supercompilation-of-sat" id="toc-supercompilation-of-sat">Supercompilation of SAT</a></li>
+<li><a href="#final-words" id="toc-final-words">Final words</a></li>
+<li><a href="#references" id="toc-references">References</a></li>
 </ul>
 </nav>
 
@@ -600,104 +613,104 @@ and invokes <code>analyze</code> for each <code>If (x, m, n)</code>, all
 <code>solve(formula)</code> is being supercompiled.</p><p>To test the solver, I will use my own <a href="https://gist.github.com/hirrolot/35e3c40e49e01cfb11d67b6bcc67b23e">positive
 supercompiler written in OCaml</a>. The definitions of <code>or</code>,
 <code>and</code>, <code>solve</code>, and <code>analyze</code> will
-be:</p><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">let</span> g_rules =</span>
-<span id="cb1-2"><a href="#cb1-2"></a>  [</span>
-<span id="cb1-3"><a href="#cb1-3"></a>    ( <span class="st">"or"</span>,</span>
-<span id="cb1-4"><a href="#cb1-4"></a>      [</span>
-<span id="cb1-5"><a href="#cb1-5"></a>        ( (<span class="st">"Var"</span>, [ <span class="st">"x"</span> ]),</span>
-<span id="cb1-6"><a href="#cb1-6"></a>          [ <span class="st">"rest"</span> ],</span>
-<span id="cb1-7"><a href="#cb1-7"></a>          ctr_call (<span class="st">"If"</span>, [ Var <span class="st">"x"</span>; ctr_call (<span class="st">"T"</span>, []); Var <span class="st">"rest"</span> ]) );</span>
-<span id="cb1-8"><a href="#cb1-8"></a>        ( (<span class="st">"Not"</span>, [ <span class="st">"x"</span> ]),</span>
-<span id="cb1-9"><a href="#cb1-9"></a>          [ <span class="st">"rest"</span> ],</span>
-<span id="cb1-10"><a href="#cb1-10"></a>          ctr_call (<span class="st">"If"</span>, [ Var <span class="st">"x"</span>; Var <span class="st">"rest"</span>; ctr_call (<span class="st">"T"</span>, []) ]) );</span>
-<span id="cb1-11"><a href="#cb1-11"></a>      ] );</span>
-<span id="cb1-12"><a href="#cb1-12"></a>    ( <span class="st">"and"</span>,</span>
-<span id="cb1-13"><a href="#cb1-13"></a>      [</span>
-<span id="cb1-14"><a href="#cb1-14"></a>        ( (<span class="st">"If"</span>, [ <span class="st">"x"</span>; <span class="st">"m"</span>; <span class="st">"n"</span> ]),</span>
-<span id="cb1-15"><a href="#cb1-15"></a>          [ <span class="st">"rest"</span> ],</span>
-<span id="cb1-16"><a href="#cb1-16"></a>          ctr_call</span>
-<span id="cb1-17"><a href="#cb1-17"></a>            ( <span class="st">"If"</span>,</span>
-<span id="cb1-18"><a href="#cb1-18"></a>              [</span>
-<span id="cb1-19"><a href="#cb1-19"></a>                Var <span class="st">"x"</span>;</span>
-<span id="cb1-20"><a href="#cb1-20"></a>                g_call (<span class="st">"and"</span>, Var <span class="st">"m"</span>, [ Var <span class="st">"rest"</span> ]);</span>
-<span id="cb1-21"><a href="#cb1-21"></a>                g_call (<span class="st">"and"</span>, Var <span class="st">"n"</span>, [ Var <span class="st">"rest"</span> ]);</span>
-<span id="cb1-22"><a href="#cb1-22"></a>              ] ) );</span>
-<span id="cb1-23"><a href="#cb1-23"></a>        ((<span class="st">"T"</span>, []), [ <span class="st">"rest"</span> ], Var <span class="st">"rest"</span>);</span>
-<span id="cb1-24"><a href="#cb1-24"></a>        ((<span class="st">"F"</span>, []), [ <span class="st">"rest"</span> ], ctr_call (<span class="st">"F"</span>, []));</span>
-<span id="cb1-25"><a href="#cb1-25"></a>      ] );</span>
-<span id="cb1-26"><a href="#cb1-26"></a>    ( <span class="st">"solve"</span>,</span>
-<span id="cb1-27"><a href="#cb1-27"></a>      [</span>
-<span id="cb1-28"><a href="#cb1-28"></a>        ( (<span class="st">"If"</span>, [ <span class="st">"x"</span>; <span class="st">"m"</span>; <span class="st">"n"</span> ]),</span>
-<span id="cb1-29"><a href="#cb1-29"></a>          [],</span>
-<span id="cb1-30"><a href="#cb1-30"></a>          g_call</span>
-<span id="cb1-31"><a href="#cb1-31"></a>            ( <span class="st">"analyze"</span>,</span>
-<span id="cb1-32"><a href="#cb1-32"></a>              Var <span class="st">"x"</span>,</span>
-<span id="cb1-33"><a href="#cb1-33"></a>              [ g_call (<span class="st">"solve"</span>, Var <span class="st">"m"</span>, []); g_call (<span class="st">"solve"</span>, Var <span class="st">"n"</span>, []) ]</span>
-<span id="cb1-34"><a href="#cb1-34"></a>            ) );</span>
-<span id="cb1-35"><a href="#cb1-35"></a>        ((<span class="st">"T"</span>, []), [], ctr_call (<span class="st">"T"</span>, []));</span>
-<span id="cb1-36"><a href="#cb1-36"></a>        ((<span class="st">"F"</span>, []), [], ctr_call (<span class="st">"F"</span>, []));</span>
-<span id="cb1-37"><a href="#cb1-37"></a>      ] );</span>
-<span id="cb1-38"><a href="#cb1-38"></a>    ( <span class="st">"analyze"</span>,</span>
-<span id="cb1-39"><a href="#cb1-39"></a>      [ ((<span class="st">"T"</span>, []), [ <span class="st">"m"</span>; <span class="st">"n"</span> ], Var <span class="st">"m"</span>); ((<span class="st">"F"</span>, []), [ <span class="st">"m"</span>; <span class="st">"n"</span> ], Var <span class="st">"n"</span>) ]</span>
-<span id="cb1-40"><a href="#cb1-40"></a>    );</span>
-<span id="cb1-41"><a href="#cb1-41"></a>  ]</span></code></pre></div><p>And some helper functions in OCaml to conveniently construct CNF
-formulas:</p><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">let</span> <span class="kw">rec</span> clause = <span class="kw">function</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a>  | `Var x :: rest -&gt; g_call (<span class="st">"or"</span>, ctr_call (<span class="st">"Var"</span>, [ Var x ]), [ clause rest ])</span>
-<span id="cb2-3"><a href="#cb2-3"></a>  | `Not x :: rest -&gt; g_call (<span class="st">"or"</span>, ctr_call (<span class="st">"Not"</span>, [ Var x ]), [ clause rest ])</span>
-<span id="cb2-4"><a href="#cb2-4"></a>  | [] -&gt; ctr_call (<span class="st">"F"</span>, [])</span>
-<span id="cb2-5"><a href="#cb2-5"></a></span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="kw">let</span> <span class="kw">rec</span> formula = <span class="kw">function</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a>  | hd :: rest -&gt; g_call (<span class="st">"and"</span>, hd, [ formula rest ])</span>
-<span id="cb2-8"><a href="#cb2-8"></a>  | [] -&gt; ctr_call (<span class="st">"T"</span>, [])</span></code></pre></div><p>The function <code>check</code> calls <code>optimize</code>, which is
+be:</p><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb1-1"><a href="#cb1-1" aria-label="1"></a><span class="kw">let</span> g_rules =</span>
+<span id="cb1-2"><a href="#cb1-2" aria-label="2"></a>  [</span>
+<span id="cb1-3"><a href="#cb1-3" aria-label="3"></a>    ( <span class="st">"or"</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-label="4"></a>      [</span>
+<span id="cb1-5"><a href="#cb1-5" aria-label="5"></a>        ( (<span class="st">"Var"</span>, [ <span class="st">"x"</span> ]),</span>
+<span id="cb1-6"><a href="#cb1-6" aria-label="6"></a>          [ <span class="st">"rest"</span> ],</span>
+<span id="cb1-7"><a href="#cb1-7" aria-label="7"></a>          ctr_call (<span class="st">"If"</span>, [ Var <span class="st">"x"</span>; ctr_call (<span class="st">"T"</span>, []); Var <span class="st">"rest"</span> ]) );</span>
+<span id="cb1-8"><a href="#cb1-8" aria-label="8"></a>        ( (<span class="st">"Not"</span>, [ <span class="st">"x"</span> ]),</span>
+<span id="cb1-9"><a href="#cb1-9" aria-label="9"></a>          [ <span class="st">"rest"</span> ],</span>
+<span id="cb1-10"><a href="#cb1-10" aria-label="10"></a>          ctr_call (<span class="st">"If"</span>, [ Var <span class="st">"x"</span>; Var <span class="st">"rest"</span>; ctr_call (<span class="st">"T"</span>, []) ]) );</span>
+<span id="cb1-11"><a href="#cb1-11" aria-label="11"></a>      ] );</span>
+<span id="cb1-12"><a href="#cb1-12" aria-label="12"></a>    ( <span class="st">"and"</span>,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-label="13"></a>      [</span>
+<span id="cb1-14"><a href="#cb1-14" aria-label="14"></a>        ( (<span class="st">"If"</span>, [ <span class="st">"x"</span>; <span class="st">"m"</span>; <span class="st">"n"</span> ]),</span>
+<span id="cb1-15"><a href="#cb1-15" aria-label="15"></a>          [ <span class="st">"rest"</span> ],</span>
+<span id="cb1-16"><a href="#cb1-16" aria-label="16"></a>          ctr_call</span>
+<span id="cb1-17"><a href="#cb1-17" aria-label="17"></a>            ( <span class="st">"If"</span>,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-label="18"></a>              [</span>
+<span id="cb1-19"><a href="#cb1-19" aria-label="19"></a>                Var <span class="st">"x"</span>;</span>
+<span id="cb1-20"><a href="#cb1-20" aria-label="20"></a>                g_call (<span class="st">"and"</span>, Var <span class="st">"m"</span>, [ Var <span class="st">"rest"</span> ]);</span>
+<span id="cb1-21"><a href="#cb1-21" aria-label="21"></a>                g_call (<span class="st">"and"</span>, Var <span class="st">"n"</span>, [ Var <span class="st">"rest"</span> ]);</span>
+<span id="cb1-22"><a href="#cb1-22" aria-label="22"></a>              ] ) );</span>
+<span id="cb1-23"><a href="#cb1-23" aria-label="23"></a>        ((<span class="st">"T"</span>, []), [ <span class="st">"rest"</span> ], Var <span class="st">"rest"</span>);</span>
+<span id="cb1-24"><a href="#cb1-24" aria-label="24"></a>        ((<span class="st">"F"</span>, []), [ <span class="st">"rest"</span> ], ctr_call (<span class="st">"F"</span>, []));</span>
+<span id="cb1-25"><a href="#cb1-25" aria-label="25"></a>      ] );</span>
+<span id="cb1-26"><a href="#cb1-26" aria-label="26"></a>    ( <span class="st">"solve"</span>,</span>
+<span id="cb1-27"><a href="#cb1-27" aria-label="27"></a>      [</span>
+<span id="cb1-28"><a href="#cb1-28" aria-label="28"></a>        ( (<span class="st">"If"</span>, [ <span class="st">"x"</span>; <span class="st">"m"</span>; <span class="st">"n"</span> ]),</span>
+<span id="cb1-29"><a href="#cb1-29" aria-label="29"></a>          [],</span>
+<span id="cb1-30"><a href="#cb1-30" aria-label="30"></a>          g_call</span>
+<span id="cb1-31"><a href="#cb1-31" aria-label="31"></a>            ( <span class="st">"analyze"</span>,</span>
+<span id="cb1-32"><a href="#cb1-32" aria-label="32"></a>              Var <span class="st">"x"</span>,</span>
+<span id="cb1-33"><a href="#cb1-33" aria-label="33"></a>              [ g_call (<span class="st">"solve"</span>, Var <span class="st">"m"</span>, []); g_call (<span class="st">"solve"</span>, Var <span class="st">"n"</span>, []) ]</span>
+<span id="cb1-34"><a href="#cb1-34" aria-label="34"></a>            ) );</span>
+<span id="cb1-35"><a href="#cb1-35" aria-label="35"></a>        ((<span class="st">"T"</span>, []), [], ctr_call (<span class="st">"T"</span>, []));</span>
+<span id="cb1-36"><a href="#cb1-36" aria-label="36"></a>        ((<span class="st">"F"</span>, []), [], ctr_call (<span class="st">"F"</span>, []));</span>
+<span id="cb1-37"><a href="#cb1-37" aria-label="37"></a>      ] );</span>
+<span id="cb1-38"><a href="#cb1-38" aria-label="38"></a>    ( <span class="st">"analyze"</span>,</span>
+<span id="cb1-39"><a href="#cb1-39" aria-label="39"></a>      [ ((<span class="st">"T"</span>, []), [ <span class="st">"m"</span>; <span class="st">"n"</span> ], Var <span class="st">"m"</span>); ((<span class="st">"F"</span>, []), [ <span class="st">"m"</span>; <span class="st">"n"</span> ], Var <span class="st">"n"</span>) ]</span>
+<span id="cb1-40"><a href="#cb1-40" aria-label="40"></a>    );</span>
+<span id="cb1-41"><a href="#cb1-41" aria-label="41"></a>  ]</span></code></pre></div><p>And some helper functions in OCaml to conveniently construct CNF
+formulas:</p><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb2-1"><a href="#cb2-1" aria-label="1"></a><span class="kw">let</span> <span class="kw">rec</span> clause = <span class="kw">function</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-label="2"></a>  | `Var x :: rest -&gt; g_call (<span class="st">"or"</span>, ctr_call (<span class="st">"Var"</span>, [ Var x ]), [ clause rest ])</span>
+<span id="cb2-3"><a href="#cb2-3" aria-label="3"></a>  | `Not x :: rest -&gt; g_call (<span class="st">"or"</span>, ctr_call (<span class="st">"Not"</span>, [ Var x ]), [ clause rest ])</span>
+<span id="cb2-4"><a href="#cb2-4" aria-label="4"></a>  | [] -&gt; ctr_call (<span class="st">"F"</span>, [])</span>
+<span id="cb2-5"><a href="#cb2-5" aria-label="5"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-label="6"></a><span class="kw">let</span> <span class="kw">rec</span> formula = <span class="kw">function</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-label="7"></a>  | hd :: rest -&gt; g_call (<span class="st">"and"</span>, hd, [ formula rest ])</span>
+<span id="cb2-8"><a href="#cb2-8" aria-label="8"></a>  | [] -&gt; ctr_call (<span class="st">"T"</span>, [])</span></code></pre></div><p>The function <code>check</code> calls <code>optimize</code>, which is
 supercompilation + residualization, on a given <code>formula</code>, and
-compares the resudual task with <code>expected</code>:</p><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">let</span> check ~expected formula =</span>
-<span id="cb3-2"><a href="#cb3-2"></a>  check ~equal:[%derive.eq: <span class="dt">string</span> * <span class="dt">string</span> <span class="dt">list</span>]</span>
-<span id="cb3-3"><a href="#cb3-3"></a>    ~show:[%derive.show: <span class="dt">string</span> * <span class="dt">string</span> <span class="dt">list</span>] ~expected</span>
-<span id="cb3-4"><a href="#cb3-4"></a>    ~actual:(optimize ~g_rules (g_call (<span class="st">"solve"</span>, formula, [])))</span></code></pre></div><p>Testing “x AND y”:</p><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">let</span> () =</span>
-<span id="cb4-2"><a href="#cb4-2"></a>  check</span>
-<span id="cb4-3"><a href="#cb4-3"></a>    ~expected:</span>
-<span id="cb4-4"><a href="#cb4-4"></a>      ( <span class="st">"g0(x, y)"</span>,</span>
-<span id="cb4-5"><a href="#cb4-5"></a>        [</span>
-<span id="cb4-6"><a href="#cb4-6"></a>          <span class="st">"g0(F(), y) = F()"</span>;</span>
-<span id="cb4-7"><a href="#cb4-7"></a>          <span class="st">"g0(T(), y) = g1(y)"</span>;</span>
-<span id="cb4-8"><a href="#cb4-8"></a>          <span class="st">"g1(F()) = F()"</span>;</span>
-<span id="cb4-9"><a href="#cb4-9"></a>          <span class="st">"g1(T()) = T()"</span>;</span>
-<span id="cb4-10"><a href="#cb4-10"></a>        ] )</span>
-<span id="cb4-11"><a href="#cb4-11"></a>    (formula [ clause [ `Var <span class="st">"x"</span> ]; clause [ `Var <span class="st">"y"</span> ] ]);</span></code></pre></div><p>The residual function <code>g0</code> acts as the AND operation. The
-formula is <strong>satisfiable</strong>.</p><p>Testing “(x OR y) AND NOT z”:</p><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb5-1"><a href="#cb5-1"></a>  check</span>
-<span id="cb5-2"><a href="#cb5-2"></a>    ~expected:</span>
-<span id="cb5-3"><a href="#cb5-3"></a>      ( <span class="st">"g0(x, y, z)"</span>,</span>
-<span id="cb5-4"><a href="#cb5-4"></a>        [</span>
-<span id="cb5-5"><a href="#cb5-5"></a>          <span class="st">"g0(F(), y, z) = g1(y, z)"</span>;</span>
-<span id="cb5-6"><a href="#cb5-6"></a>          <span class="st">"g0(T(), y, z) = g3(z)"</span>;</span>
-<span id="cb5-7"><a href="#cb5-7"></a>          <span class="st">"g1(F(), z) = F()"</span>;</span>
-<span id="cb5-8"><a href="#cb5-8"></a>          <span class="st">"g1(T(), z) = g2(z)"</span>;</span>
-<span id="cb5-9"><a href="#cb5-9"></a>          <span class="st">"g2(F()) = T()"</span>;</span>
-<span id="cb5-10"><a href="#cb5-10"></a>          <span class="st">"g2(T()) = F()"</span>;</span>
-<span id="cb5-11"><a href="#cb5-11"></a>          <span class="st">"g3(F()) = T()"</span>;</span>
-<span id="cb5-12"><a href="#cb5-12"></a>          <span class="st">"g3(T()) = F()"</span>;</span>
-<span id="cb5-13"><a href="#cb5-13"></a>        ] )</span>
-<span id="cb5-14"><a href="#cb5-14"></a>    (formula [ clause [ `Var <span class="st">"x"</span>; `Var <span class="st">"y"</span> ]; clause [ `Not <span class="st">"z"</span> ] ]);</span></code></pre></div><p>The formula is TRUE when either “x” or “y” are TRUE (or both), whilst
+compares the resudual task with <code>expected</code>:</p><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb3-1"><a href="#cb3-1" aria-label="1"></a><span class="kw">let</span> check ~expected formula =</span>
+<span id="cb3-2"><a href="#cb3-2" aria-label="2"></a>  check ~equal:[%derive.eq: <span class="dt">string</span> * <span class="dt">string</span> <span class="dt">list</span>]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-label="3"></a>    ~show:[%derive.show: <span class="dt">string</span> * <span class="dt">string</span> <span class="dt">list</span>] ~expected</span>
+<span id="cb3-4"><a href="#cb3-4" aria-label="4"></a>    ~actual:(optimize ~g_rules (g_call (<span class="st">"solve"</span>, formula, [])))</span></code></pre></div><p>Testing “x AND y”:</p><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb4-1"><a href="#cb4-1" aria-label="1"></a><span class="kw">let</span> () =</span>
+<span id="cb4-2"><a href="#cb4-2" aria-label="2"></a>  check</span>
+<span id="cb4-3"><a href="#cb4-3" aria-label="3"></a>    ~expected:</span>
+<span id="cb4-4"><a href="#cb4-4" aria-label="4"></a>      ( <span class="st">"g0(x, y)"</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-label="5"></a>        [</span>
+<span id="cb4-6"><a href="#cb4-6" aria-label="6"></a>          <span class="st">"g0(F(), y) = F()"</span>;</span>
+<span id="cb4-7"><a href="#cb4-7" aria-label="7"></a>          <span class="st">"g0(T(), y) = g1(y)"</span>;</span>
+<span id="cb4-8"><a href="#cb4-8" aria-label="8"></a>          <span class="st">"g1(F()) = F()"</span>;</span>
+<span id="cb4-9"><a href="#cb4-9" aria-label="9"></a>          <span class="st">"g1(T()) = T()"</span>;</span>
+<span id="cb4-10"><a href="#cb4-10" aria-label="10"></a>        ] )</span>
+<span id="cb4-11"><a href="#cb4-11" aria-label="11"></a>    (formula [ clause [ `Var <span class="st">"x"</span> ]; clause [ `Var <span class="st">"y"</span> ] ]);</span></code></pre></div><p>The residual function <code>g0</code> acts as the AND operation. The
+formula is <strong>satisfiable</strong>.</p><p>Testing “(x OR y) AND NOT z”:</p><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb5-1"><a href="#cb5-1" aria-label="1"></a>  check</span>
+<span id="cb5-2"><a href="#cb5-2" aria-label="2"></a>    ~expected:</span>
+<span id="cb5-3"><a href="#cb5-3" aria-label="3"></a>      ( <span class="st">"g0(x, y, z)"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-label="4"></a>        [</span>
+<span id="cb5-5"><a href="#cb5-5" aria-label="5"></a>          <span class="st">"g0(F(), y, z) = g1(y, z)"</span>;</span>
+<span id="cb5-6"><a href="#cb5-6" aria-label="6"></a>          <span class="st">"g0(T(), y, z) = g3(z)"</span>;</span>
+<span id="cb5-7"><a href="#cb5-7" aria-label="7"></a>          <span class="st">"g1(F(), z) = F()"</span>;</span>
+<span id="cb5-8"><a href="#cb5-8" aria-label="8"></a>          <span class="st">"g1(T(), z) = g2(z)"</span>;</span>
+<span id="cb5-9"><a href="#cb5-9" aria-label="9"></a>          <span class="st">"g2(F()) = T()"</span>;</span>
+<span id="cb5-10"><a href="#cb5-10" aria-label="10"></a>          <span class="st">"g2(T()) = F()"</span>;</span>
+<span id="cb5-11"><a href="#cb5-11" aria-label="11"></a>          <span class="st">"g3(F()) = T()"</span>;</span>
+<span id="cb5-12"><a href="#cb5-12" aria-label="12"></a>          <span class="st">"g3(T()) = F()"</span>;</span>
+<span id="cb5-13"><a href="#cb5-13" aria-label="13"></a>        ] )</span>
+<span id="cb5-14"><a href="#cb5-14" aria-label="14"></a>    (formula [ clause [ `Var <span class="st">"x"</span>; `Var <span class="st">"y"</span> ]; clause [ `Not <span class="st">"z"</span> ] ]);</span></code></pre></div><p>The formula is TRUE when either “x” or “y” are TRUE (or both), whilst
 “z” must always be FALSE. The formula is
-<strong>satisfiable</strong>.</p><p>Testing “(x OR NOT z) AND (y OR z OR NOT x)”:</p><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb6-1"><a href="#cb6-1"></a>  check</span>
-<span id="cb6-2"><a href="#cb6-2"></a>    ~expected:</span>
-<span id="cb6-3"><a href="#cb6-3"></a>      ( <span class="st">"g0(x, y, z)"</span>,</span>
-<span id="cb6-4"><a href="#cb6-4"></a>        [</span>
-<span id="cb6-5"><a href="#cb6-5"></a>          <span class="st">"g0(F(), y, z) = g1(z, y)"</span>;</span>
-<span id="cb6-6"><a href="#cb6-6"></a>          <span class="st">"g0(T(), y, z) = g3(y, z)"</span>;</span>
-<span id="cb6-7"><a href="#cb6-7"></a>          <span class="st">"g1(F(), y) = g2(y)"</span>;</span>
-<span id="cb6-8"><a href="#cb6-8"></a>          <span class="st">"g1(T(), y) = F()"</span>;</span>
-<span id="cb6-9"><a href="#cb6-9"></a>          <span class="st">"g2(F()) = T()"</span>;</span>
-<span id="cb6-10"><a href="#cb6-10"></a>          <span class="st">"g2(T()) = T()"</span>;</span>
-<span id="cb6-11"><a href="#cb6-11"></a>          <span class="st">"g3(F(), z) = g4(z)"</span>;</span>
-<span id="cb6-12"><a href="#cb6-12"></a>          <span class="st">"g3(T(), z) = T()"</span>;</span>
-<span id="cb6-13"><a href="#cb6-13"></a>          <span class="st">"g4(F()) = F()"</span>;</span>
-<span id="cb6-14"><a href="#cb6-14"></a>          <span class="st">"g4(T()) = T()"</span>;</span>
-<span id="cb6-15"><a href="#cb6-15"></a>        ] )</span>
-<span id="cb6-16"><a href="#cb6-16"></a>    (formula</span>
-<span id="cb6-17"><a href="#cb6-17"></a>       [</span>
-<span id="cb6-18"><a href="#cb6-18"></a>         clause [ `Var <span class="st">"x"</span>; `Not <span class="st">"z"</span> ]; clause [ `Var <span class="st">"y"</span>; `Var <span class="st">"z"</span>; `Not <span class="st">"x"</span> ];</span>
-<span id="cb6-19"><a href="#cb6-19"></a>       ]);</span></code></pre></div><p>Ditto.</p><p>Testing “(a OR b) AND (NOT b OR NOT d) AND (c OR d) AND (NOT d OR NOT
+<strong>satisfiable</strong>.</p><p>Testing “(x OR NOT z) AND (y OR z OR NOT x)”:</p><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb6-1"><a href="#cb6-1" aria-label="1"></a>  check</span>
+<span id="cb6-2"><a href="#cb6-2" aria-label="2"></a>    ~expected:</span>
+<span id="cb6-3"><a href="#cb6-3" aria-label="3"></a>      ( <span class="st">"g0(x, y, z)"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-label="4"></a>        [</span>
+<span id="cb6-5"><a href="#cb6-5" aria-label="5"></a>          <span class="st">"g0(F(), y, z) = g1(z, y)"</span>;</span>
+<span id="cb6-6"><a href="#cb6-6" aria-label="6"></a>          <span class="st">"g0(T(), y, z) = g3(y, z)"</span>;</span>
+<span id="cb6-7"><a href="#cb6-7" aria-label="7"></a>          <span class="st">"g1(F(), y) = g2(y)"</span>;</span>
+<span id="cb6-8"><a href="#cb6-8" aria-label="8"></a>          <span class="st">"g1(T(), y) = F()"</span>;</span>
+<span id="cb6-9"><a href="#cb6-9" aria-label="9"></a>          <span class="st">"g2(F()) = T()"</span>;</span>
+<span id="cb6-10"><a href="#cb6-10" aria-label="10"></a>          <span class="st">"g2(T()) = T()"</span>;</span>
+<span id="cb6-11"><a href="#cb6-11" aria-label="11"></a>          <span class="st">"g3(F(), z) = g4(z)"</span>;</span>
+<span id="cb6-12"><a href="#cb6-12" aria-label="12"></a>          <span class="st">"g3(T(), z) = T()"</span>;</span>
+<span id="cb6-13"><a href="#cb6-13" aria-label="13"></a>          <span class="st">"g4(F()) = F()"</span>;</span>
+<span id="cb6-14"><a href="#cb6-14" aria-label="14"></a>          <span class="st">"g4(T()) = T()"</span>;</span>
+<span id="cb6-15"><a href="#cb6-15" aria-label="15"></a>        ] )</span>
+<span id="cb6-16"><a href="#cb6-16" aria-label="16"></a>    (formula</span>
+<span id="cb6-17"><a href="#cb6-17" aria-label="17"></a>       [</span>
+<span id="cb6-18"><a href="#cb6-18" aria-label="18"></a>         clause [ `Var <span class="st">"x"</span>; `Not <span class="st">"z"</span> ]; clause [ `Var <span class="st">"y"</span>; `Var <span class="st">"z"</span>; `Not <span class="st">"x"</span> ];</span>
+<span id="cb6-19"><a href="#cb6-19" aria-label="19"></a>       ]);</span></code></pre></div><p>Ditto.</p><p>Testing “(a OR b) AND (NOT b OR NOT d) AND (c OR d) AND (NOT d OR NOT
 e) AND (e OR NOT f) AND (f OR NOT g) AND (f OR g) AND (g OR NOT p) AND
 (h OR NOT i) AND (NOT h OR NOT n) AND (i OR g) AND (i OR NOT g) AND (NOT
 g OR NOT k) AND (g OR l) AND (k OR l) AND (m OR n) AND (n OR NOT o) AND
@@ -705,289 +718,289 @@ g OR NOT k) AND (g OR l) AND (k OR l) AND (m OR n) AND (n OR NOT o) AND
 <summary>
 Show the test case
 </summary>
-<div class="sourceCode" id="cb7"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb7-1"><a href="#cb7-1"></a>  check</span>
-<span id="cb7-2"><a href="#cb7-2"></a>    ~expected:</span>
-<span id="cb7-3"><a href="#cb7-3"></a>      ( <span class="st">"g0(a, b, c, d, e, f, g, h, i, k, l, m, n, o, p)"</span>,</span>
-<span id="cb7-4"><a href="#cb7-4"></a>        [</span>
-<span id="cb7-5"><a href="#cb7-5"></a>          <span class="st">"g0(F(), b, c, d, e, f, g, h, i, k, l, m, n, o, p) = g1(b, c, d, e, </span><span class="ch">\</span></span>
-<span id="cb7-6"><a href="#cb7-6"></a><span class="st">           f, g, h, i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-7"><a href="#cb7-7"></a>          <span class="st">"g0(T(), b, c, d, e, f, g, h, i, k, l, m, n, o, p) = g30(b, c, d, e, </span><span class="ch">\</span></span>
-<span id="cb7-8"><a href="#cb7-8"></a><span class="st">           f, g, h, i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-9"><a href="#cb7-9"></a>          <span class="st">"g1(F(), c, d, e, f, g, h, i, k, l, m, n, o, p) = F()"</span>;</span>
-<span id="cb7-10"><a href="#cb7-10"></a>          <span class="st">"g1(T(), c, d, e, f, g, h, i, k, l, m, n, o, p) = g2(d, c, e, f, g, </span><span class="ch">\</span></span>
-<span id="cb7-11"><a href="#cb7-11"></a><span class="st">           h, i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-12"><a href="#cb7-12"></a>          <span class="st">"g10(F(), h, i, k, l, m, n, o) = g11(h, i, k, l, m, n, o)"</span>;</span>
-<span id="cb7-13"><a href="#cb7-13"></a>          <span class="st">"g10(T(), h, i, k, l, m, n, o) = F()"</span>;</span>
-<span id="cb7-14"><a href="#cb7-14"></a>          <span class="st">"g11(F(), i, k, l, m, n, o) = g12(i)"</span>;</span>
-<span id="cb7-15"><a href="#cb7-15"></a>          <span class="st">"g11(T(), i, k, l, m, n, o) = g13(n, i, k, l, m, o)"</span>;</span>
-<span id="cb7-16"><a href="#cb7-16"></a>          <span class="st">"g12(F()) = F()"</span>;</span>
-<span id="cb7-17"><a href="#cb7-17"></a>          <span class="st">"g12(T()) = F()"</span>;</span>
-<span id="cb7-18"><a href="#cb7-18"></a>          <span class="st">"g13(F(), i, k, l, m, o) = g14(i, k, l, m, o)"</span>;</span>
-<span id="cb7-19"><a href="#cb7-19"></a>          <span class="st">"g13(T(), i, k, l, m, o) = F()"</span>;</span>
-<span id="cb7-20"><a href="#cb7-20"></a>          <span class="st">"g14(F(), k, l, m, o) = F()"</span>;</span>
-<span id="cb7-21"><a href="#cb7-21"></a>          <span class="st">"g14(T(), k, l, m, o) = g15(l, k, m, o)"</span>;</span>
-<span id="cb7-22"><a href="#cb7-22"></a>          <span class="st">"g15(F(), k, m, o) = F()"</span>;</span>
-<span id="cb7-23"><a href="#cb7-23"></a>          <span class="st">"g15(T(), k, m, o) = g16(k, m, o)"</span>;</span>
-<span id="cb7-24"><a href="#cb7-24"></a>          <span class="st">"g16(F(), m, o) = g17(m, o)"</span>;</span>
-<span id="cb7-25"><a href="#cb7-25"></a>          <span class="st">"g16(T(), m, o) = g19(m, o)"</span>;</span>
-<span id="cb7-26"><a href="#cb7-26"></a>          <span class="st">"g17(F(), o) = F()"</span>;</span>
-<span id="cb7-27"><a href="#cb7-27"></a>          <span class="st">"g17(T(), o) = g18(o)"</span>;</span>
-<span id="cb7-28"><a href="#cb7-28"></a>          <span class="st">"g18(F()) = F()"</span>;</span>
-<span id="cb7-29"><a href="#cb7-29"></a>          <span class="st">"g18(T()) = F()"</span>;</span>
-<span id="cb7-30"><a href="#cb7-30"></a>          <span class="st">"g19(F(), o) = F()"</span>;</span>
-<span id="cb7-31"><a href="#cb7-31"></a>          <span class="st">"g19(T(), o) = g20(o)"</span>;</span>
-<span id="cb7-32"><a href="#cb7-32"></a>          <span class="st">"g2(F(), c, e, f, g, h, i, k, l, m, n, o, p) = g3(c, e, f, g, h, i, </span><span class="ch">\</span></span>
-<span id="cb7-33"><a href="#cb7-33"></a><span class="st">           k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-34"><a href="#cb7-34"></a>          <span class="st">"g2(T(), c, e, f, g, h, i, k, l, m, n, o, p) = F()"</span>;</span>
-<span id="cb7-35"><a href="#cb7-35"></a>          <span class="st">"g20(F()) = F()"</span>;</span>
-<span id="cb7-36"><a href="#cb7-36"></a>          <span class="st">"g20(T()) = F()"</span>;</span>
-<span id="cb7-37"><a href="#cb7-37"></a>          <span class="st">"g21(F(), i, k, l, m, n, o, p) = g22(i)"</span>;</span>
-<span id="cb7-38"><a href="#cb7-38"></a>          <span class="st">"g21(T(), i, k, l, m, n, o, p) = g23(n, i, k, l, m, o, p)"</span>;</span>
-<span id="cb7-39"><a href="#cb7-39"></a>          <span class="st">"g22(F()) = F()"</span>;</span>
-<span id="cb7-40"><a href="#cb7-40"></a>          <span class="st">"g22(T()) = F()"</span>;</span>
-<span id="cb7-41"><a href="#cb7-41"></a>          <span class="st">"g23(F(), i, k, l, m, o, p) = g24(i, k, l, m, o, p)"</span>;</span>
-<span id="cb7-42"><a href="#cb7-42"></a>          <span class="st">"g23(T(), i, k, l, m, o, p) = F()"</span>;</span>
-<span id="cb7-43"><a href="#cb7-43"></a>          <span class="st">"g24(F(), k, l, m, o, p) = F()"</span>;</span>
-<span id="cb7-44"><a href="#cb7-44"></a>          <span class="st">"g24(T(), k, l, m, o, p) = g25(k, l, m, o, p)"</span>;</span>
-<span id="cb7-45"><a href="#cb7-45"></a>          <span class="st">"g25(F(), l, m, o, p) = g26(l, m, o, p)"</span>;</span>
-<span id="cb7-46"><a href="#cb7-46"></a>          <span class="st">"g25(T(), l, m, o, p) = F()"</span>;</span>
-<span id="cb7-47"><a href="#cb7-47"></a>          <span class="st">"g26(F(), m, o, p) = F()"</span>;</span>
-<span id="cb7-48"><a href="#cb7-48"></a>          <span class="st">"g26(T(), m, o, p) = g27(m, o, p)"</span>;</span>
-<span id="cb7-49"><a href="#cb7-49"></a>          <span class="st">"g27(F(), o, p) = F()"</span>;</span>
-<span id="cb7-50"><a href="#cb7-50"></a>          <span class="st">"g27(T(), o, p) = g28(o, p)"</span>;</span>
-<span id="cb7-51"><a href="#cb7-51"></a>          <span class="st">"g28(F(), p) = g29(p)"</span>;</span>
-<span id="cb7-52"><a href="#cb7-52"></a>          <span class="st">"g28(T(), p) = F()"</span>;</span>
-<span id="cb7-53"><a href="#cb7-53"></a>          <span class="st">"g29(F()) = F()"</span>;</span>
-<span id="cb7-54"><a href="#cb7-54"></a>          <span class="st">"g29(T()) = T()"</span>;</span>
-<span id="cb7-55"><a href="#cb7-55"></a>          <span class="st">"g3(F(), e, f, g, h, i, k, l, m, n, o, p) = F()"</span>;</span>
-<span id="cb7-56"><a href="#cb7-56"></a>          <span class="st">"g3(T(), e, f, g, h, i, k, l, m, n, o, p) = g4(e, f, g, h, i, k, l, </span><span class="ch">\</span></span>
-<span id="cb7-57"><a href="#cb7-57"></a><span class="st">           m, n, o, p)"</span>;</span>
-<span id="cb7-58"><a href="#cb7-58"></a>          <span class="st">"g30(F(), c, d, e, f, g, h, i, k, l, m, n, o, p) = g31(c, d, e, f, </span><span class="ch">\</span></span>
-<span id="cb7-59"><a href="#cb7-59"></a><span class="st">           g, h, i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-60"><a href="#cb7-60"></a>          <span class="st">"g30(T(), c, d, e, f, g, h, i, k, l, m, n, o, p) = g66(d, c, e, f, </span><span class="ch">\</span></span>
-<span id="cb7-61"><a href="#cb7-61"></a><span class="st">           g, h, i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-62"><a href="#cb7-62"></a>          <span class="st">"g31(F(), d, e, f, g, h, i, k, l, m, n, o, p) = g32(d, e, f, g)"</span>;</span>
-<span id="cb7-63"><a href="#cb7-63"></a>          <span class="st">"g31(T(), d, e, f, g, h, i, k, l, m, n, o, p) = g36(d, e, f, g, h, </span><span class="ch">\</span></span>
-<span id="cb7-64"><a href="#cb7-64"></a><span class="st">           i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-65"><a href="#cb7-65"></a>          <span class="st">"g32(F(), e, f, g) = F()"</span>;</span>
-<span id="cb7-66"><a href="#cb7-66"></a>          <span class="st">"g32(T(), e, f, g) = g33(e, f, g)"</span>;</span>
-<span id="cb7-67"><a href="#cb7-67"></a>          <span class="st">"g33(F(), f, g) = g34(f, g)"</span>;</span>
-<span id="cb7-68"><a href="#cb7-68"></a>          <span class="st">"g33(T(), f, g) = F()"</span>;</span>
-<span id="cb7-69"><a href="#cb7-69"></a>          <span class="st">"g34(F(), g) = g35(g)"</span>;</span>
-<span id="cb7-70"><a href="#cb7-70"></a>          <span class="st">"g34(T(), g) = F()"</span>;</span>
-<span id="cb7-71"><a href="#cb7-71"></a>          <span class="st">"g35(F()) = F()"</span>;</span>
-<span id="cb7-72"><a href="#cb7-72"></a>          <span class="st">"g35(T()) = F()"</span>;</span>
-<span id="cb7-73"><a href="#cb7-73"></a>          <span class="st">"g36(F(), e, f, g, h, i, k, l, m, n, o, p) = g37(e, f, g, h, i, k, </span><span class="ch">\</span></span>
-<span id="cb7-74"><a href="#cb7-74"></a><span class="st">           l, m, n, o, p)"</span>;</span>
-<span id="cb7-75"><a href="#cb7-75"></a>          <span class="st">"g36(T(), e, f, g, h, i, k, l, m, n, o, p) = g63(e, f, g)"</span>;</span>
-<span id="cb7-76"><a href="#cb7-76"></a>          <span class="st">"g37(F(), f, g, h, i, k, l, m, n, o, p) = g38(f, g)"</span>;</span>
-<span id="cb7-77"><a href="#cb7-77"></a>          <span class="st">"g37(T(), f, g, h, i, k, l, m, n, o, p) = g40(f, g, h, i, k, l, m, </span><span class="ch">\</span></span>
-<span id="cb7-78"><a href="#cb7-78"></a><span class="st">           n, o, p)"</span>;</span>
-<span id="cb7-79"><a href="#cb7-79"></a>          <span class="st">"g38(F(), g) = g39(g)"</span>;</span>
-<span id="cb7-80"><a href="#cb7-80"></a>          <span class="st">"g38(T(), g) = F()"</span>;</span>
-<span id="cb7-81"><a href="#cb7-81"></a>          <span class="st">"g39(F()) = F()"</span>;</span>
-<span id="cb7-82"><a href="#cb7-82"></a>          <span class="st">"g39(T()) = F()"</span>;</span>
-<span id="cb7-83"><a href="#cb7-83"></a>          <span class="st">"g4(F(), f, g, h, i, k, l, m, n, o, p) = g5(f, g)"</span>;</span>
-<span id="cb7-84"><a href="#cb7-84"></a>          <span class="st">"g4(T(), f, g, h, i, k, l, m, n, o, p) = g7(f, g, h, i, k, l, m, n, </span><span class="ch">\</span></span>
-<span id="cb7-85"><a href="#cb7-85"></a><span class="st">           o, p)"</span>;</span>
-<span id="cb7-86"><a href="#cb7-86"></a>          <span class="st">"g40(F(), g, h, i, k, l, m, n, o, p) = g41(g)"</span>;</span>
-<span id="cb7-87"><a href="#cb7-87"></a>          <span class="st">"g40(T(), g, h, i, k, l, m, n, o, p) = g42(g, h, i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-88"><a href="#cb7-88"></a>          <span class="st">"g41(F()) = F()"</span>;</span>
-<span id="cb7-89"><a href="#cb7-89"></a>          <span class="st">"g41(T()) = F()"</span>;</span>
-<span id="cb7-90"><a href="#cb7-90"></a>          <span class="st">"g42(F(), h, i, k, l, m, n, o, p) = g43(p, h, i, k, l, m, n, o)"</span>;</span>
-<span id="cb7-91"><a href="#cb7-91"></a>          <span class="st">"g42(T(), h, i, k, l, m, n, o, p) = g54(h, i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-92"><a href="#cb7-92"></a>          <span class="st">"g43(F(), h, i, k, l, m, n, o) = g44(h, i, k, l, m, n, o)"</span>;</span>
-<span id="cb7-93"><a href="#cb7-93"></a>          <span class="st">"g43(T(), h, i, k, l, m, n, o) = F()"</span>;</span>
-<span id="cb7-94"><a href="#cb7-94"></a>          <span class="st">"g44(F(), i, k, l, m, n, o) = g45(i)"</span>;</span>
-<span id="cb7-95"><a href="#cb7-95"></a>          <span class="st">"g44(T(), i, k, l, m, n, o) = g46(n, i, k, l, m, o)"</span>;</span>
-<span id="cb7-96"><a href="#cb7-96"></a>          <span class="st">"g45(F()) = F()"</span>;</span>
-<span id="cb7-97"><a href="#cb7-97"></a>          <span class="st">"g45(T()) = F()"</span>;</span>
-<span id="cb7-98"><a href="#cb7-98"></a>          <span class="st">"g46(F(), i, k, l, m, o) = g47(i, k, l, m, o)"</span>;</span>
-<span id="cb7-99"><a href="#cb7-99"></a>          <span class="st">"g46(T(), i, k, l, m, o) = F()"</span>;</span>
-<span id="cb7-100"><a href="#cb7-100"></a>          <span class="st">"g47(F(), k, l, m, o) = F()"</span>;</span>
-<span id="cb7-101"><a href="#cb7-101"></a>          <span class="st">"g47(T(), k, l, m, o) = g48(l, k, m, o)"</span>;</span>
-<span id="cb7-102"><a href="#cb7-102"></a>          <span class="st">"g48(F(), k, m, o) = F()"</span>;</span>
-<span id="cb7-103"><a href="#cb7-103"></a>          <span class="st">"g48(T(), k, m, o) = g49(k, m, o)"</span>;</span>
-<span id="cb7-104"><a href="#cb7-104"></a>          <span class="st">"g49(F(), m, o) = g50(m, o)"</span>;</span>
-<span id="cb7-105"><a href="#cb7-105"></a>          <span class="st">"g49(T(), m, o) = g52(m, o)"</span>;</span>
-<span id="cb7-106"><a href="#cb7-106"></a>          <span class="st">"g5(F(), g) = g6(g)"</span>;</span>
-<span id="cb7-107"><a href="#cb7-107"></a>          <span class="st">"g5(T(), g) = F()"</span>;</span>
-<span id="cb7-108"><a href="#cb7-108"></a>          <span class="st">"g50(F(), o) = F()"</span>;</span>
-<span id="cb7-109"><a href="#cb7-109"></a>          <span class="st">"g50(T(), o) = g51(o)"</span>;</span>
-<span id="cb7-110"><a href="#cb7-110"></a>          <span class="st">"g51(F()) = F()"</span>;</span>
-<span id="cb7-111"><a href="#cb7-111"></a>          <span class="st">"g51(T()) = F()"</span>;</span>
-<span id="cb7-112"><a href="#cb7-112"></a>          <span class="st">"g52(F(), o) = F()"</span>;</span>
-<span id="cb7-113"><a href="#cb7-113"></a>          <span class="st">"g52(T(), o) = g53(o)"</span>;</span>
-<span id="cb7-114"><a href="#cb7-114"></a>          <span class="st">"g53(F()) = F()"</span>;</span>
-<span id="cb7-115"><a href="#cb7-115"></a>          <span class="st">"g53(T()) = F()"</span>;</span>
-<span id="cb7-116"><a href="#cb7-116"></a>          <span class="st">"g54(F(), i, k, l, m, n, o, p) = g55(i)"</span>;</span>
-<span id="cb7-117"><a href="#cb7-117"></a>          <span class="st">"g54(T(), i, k, l, m, n, o, p) = g56(n, i, k, l, m, o, p)"</span>;</span>
-<span id="cb7-118"><a href="#cb7-118"></a>          <span class="st">"g55(F()) = F()"</span>;</span>
-<span id="cb7-119"><a href="#cb7-119"></a>          <span class="st">"g55(T()) = F()"</span>;</span>
-<span id="cb7-120"><a href="#cb7-120"></a>          <span class="st">"g56(F(), i, k, l, m, o, p) = g57(i, k, l, m, o, p)"</span>;</span>
-<span id="cb7-121"><a href="#cb7-121"></a>          <span class="st">"g56(T(), i, k, l, m, o, p) = F()"</span>;</span>
-<span id="cb7-122"><a href="#cb7-122"></a>          <span class="st">"g57(F(), k, l, m, o, p) = F()"</span>;</span>
-<span id="cb7-123"><a href="#cb7-123"></a>          <span class="st">"g57(T(), k, l, m, o, p) = g58(k, l, m, o, p)"</span>;</span>
-<span id="cb7-124"><a href="#cb7-124"></a>          <span class="st">"g58(F(), l, m, o, p) = g59(l, m, o, p)"</span>;</span>
-<span id="cb7-125"><a href="#cb7-125"></a>          <span class="st">"g58(T(), l, m, o, p) = F()"</span>;</span>
-<span id="cb7-126"><a href="#cb7-126"></a>          <span class="st">"g59(F(), m, o, p) = F()"</span>;</span>
-<span id="cb7-127"><a href="#cb7-127"></a>          <span class="st">"g59(T(), m, o, p) = g60(m, o, p)"</span>;</span>
-<span id="cb7-128"><a href="#cb7-128"></a>          <span class="st">"g6(F()) = F()"</span>;</span>
-<span id="cb7-129"><a href="#cb7-129"></a>          <span class="st">"g6(T()) = F()"</span>;</span>
-<span id="cb7-130"><a href="#cb7-130"></a>          <span class="st">"g60(F(), o, p) = F()"</span>;</span>
-<span id="cb7-131"><a href="#cb7-131"></a>          <span class="st">"g60(T(), o, p) = g61(o, p)"</span>;</span>
-<span id="cb7-132"><a href="#cb7-132"></a>          <span class="st">"g61(F(), p) = g62(p)"</span>;</span>
-<span id="cb7-133"><a href="#cb7-133"></a>          <span class="st">"g61(T(), p) = F()"</span>;</span>
-<span id="cb7-134"><a href="#cb7-134"></a>          <span class="st">"g62(F()) = F()"</span>;</span>
-<span id="cb7-135"><a href="#cb7-135"></a>          <span class="st">"g62(T()) = T()"</span>;</span>
-<span id="cb7-136"><a href="#cb7-136"></a>          <span class="st">"g63(F(), f, g) = g64(f, g)"</span>;</span>
-<span id="cb7-137"><a href="#cb7-137"></a>          <span class="st">"g63(T(), f, g) = F()"</span>;</span>
-<span id="cb7-138"><a href="#cb7-138"></a>          <span class="st">"g64(F(), g) = g65(g)"</span>;</span>
-<span id="cb7-139"><a href="#cb7-139"></a>          <span class="st">"g64(T(), g) = F()"</span>;</span>
-<span id="cb7-140"><a href="#cb7-140"></a>          <span class="st">"g65(F()) = F()"</span>;</span>
-<span id="cb7-141"><a href="#cb7-141"></a>          <span class="st">"g65(T()) = F()"</span>;</span>
-<span id="cb7-142"><a href="#cb7-142"></a>          <span class="st">"g66(F(), c, e, f, g, h, i, k, l, m, n, o, p) = g67(c, e, f, g, h, </span><span class="ch">\</span></span>
-<span id="cb7-143"><a href="#cb7-143"></a><span class="st">           i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-144"><a href="#cb7-144"></a>          <span class="st">"g66(T(), c, e, f, g, h, i, k, l, m, n, o, p) = F()"</span>;</span>
-<span id="cb7-145"><a href="#cb7-145"></a>          <span class="st">"g67(F(), e, f, g, h, i, k, l, m, n, o, p) = F()"</span>;</span>
-<span id="cb7-146"><a href="#cb7-146"></a>          <span class="st">"g67(T(), e, f, g, h, i, k, l, m, n, o, p) = g68(e, f, g, h, i, k, </span><span class="ch">\</span></span>
-<span id="cb7-147"><a href="#cb7-147"></a><span class="st">           l, m, n, o, p)"</span>;</span>
-<span id="cb7-148"><a href="#cb7-148"></a>          <span class="st">"g68(F(), f, g, h, i, k, l, m, n, o, p) = g69(f, g)"</span>;</span>
-<span id="cb7-149"><a href="#cb7-149"></a>          <span class="st">"g68(T(), f, g, h, i, k, l, m, n, o, p) = g71(f, g, h, i, k, l, m, </span><span class="ch">\</span></span>
-<span id="cb7-150"><a href="#cb7-150"></a><span class="st">           n, o, p)"</span>;</span>
-<span id="cb7-151"><a href="#cb7-151"></a>          <span class="st">"g69(F(), g) = g70(g)"</span>;</span>
-<span id="cb7-152"><a href="#cb7-152"></a>          <span class="st">"g69(T(), g) = F()"</span>;</span>
-<span id="cb7-153"><a href="#cb7-153"></a>          <span class="st">"g7(F(), g, h, i, k, l, m, n, o, p) = g8(g)"</span>;</span>
-<span id="cb7-154"><a href="#cb7-154"></a>          <span class="st">"g7(T(), g, h, i, k, l, m, n, o, p) = g9(g, h, i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-155"><a href="#cb7-155"></a>          <span class="st">"g70(F()) = F()"</span>;</span>
-<span id="cb7-156"><a href="#cb7-156"></a>          <span class="st">"g70(T()) = F()"</span>;</span>
-<span id="cb7-157"><a href="#cb7-157"></a>          <span class="st">"g71(F(), g, h, i, k, l, m, n, o, p) = g72(g)"</span>;</span>
-<span id="cb7-158"><a href="#cb7-158"></a>          <span class="st">"g71(T(), g, h, i, k, l, m, n, o, p) = g73(g, h, i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-159"><a href="#cb7-159"></a>          <span class="st">"g72(F()) = F()"</span>;</span>
-<span id="cb7-160"><a href="#cb7-160"></a>          <span class="st">"g72(T()) = F()"</span>;</span>
-<span id="cb7-161"><a href="#cb7-161"></a>          <span class="st">"g73(F(), h, i, k, l, m, n, o, p) = g74(p, h, i, k, l, m, n, o)"</span>;</span>
-<span id="cb7-162"><a href="#cb7-162"></a>          <span class="st">"g73(T(), h, i, k, l, m, n, o, p) = g85(h, i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-163"><a href="#cb7-163"></a>          <span class="st">"g74(F(), h, i, k, l, m, n, o) = g75(h, i, k, l, m, n, o)"</span>;</span>
-<span id="cb7-164"><a href="#cb7-164"></a>          <span class="st">"g74(T(), h, i, k, l, m, n, o) = F()"</span>;</span>
-<span id="cb7-165"><a href="#cb7-165"></a>          <span class="st">"g75(F(), i, k, l, m, n, o) = g76(i)"</span>;</span>
-<span id="cb7-166"><a href="#cb7-166"></a>          <span class="st">"g75(T(), i, k, l, m, n, o) = g77(n, i, k, l, m, o)"</span>;</span>
-<span id="cb7-167"><a href="#cb7-167"></a>          <span class="st">"g76(F()) = F()"</span>;</span>
-<span id="cb7-168"><a href="#cb7-168"></a>          <span class="st">"g76(T()) = F()"</span>;</span>
-<span id="cb7-169"><a href="#cb7-169"></a>          <span class="st">"g77(F(), i, k, l, m, o) = g78(i, k, l, m, o)"</span>;</span>
-<span id="cb7-170"><a href="#cb7-170"></a>          <span class="st">"g77(T(), i, k, l, m, o) = F()"</span>;</span>
-<span id="cb7-171"><a href="#cb7-171"></a>          <span class="st">"g78(F(), k, l, m, o) = F()"</span>;</span>
-<span id="cb7-172"><a href="#cb7-172"></a>          <span class="st">"g78(T(), k, l, m, o) = g79(l, k, m, o)"</span>;</span>
-<span id="cb7-173"><a href="#cb7-173"></a>          <span class="st">"g79(F(), k, m, o) = F()"</span>;</span>
-<span id="cb7-174"><a href="#cb7-174"></a>          <span class="st">"g79(T(), k, m, o) = g80(k, m, o)"</span>;</span>
-<span id="cb7-175"><a href="#cb7-175"></a>          <span class="st">"g8(F()) = F()"</span>;</span>
-<span id="cb7-176"><a href="#cb7-176"></a>          <span class="st">"g8(T()) = F()"</span>;</span>
-<span id="cb7-177"><a href="#cb7-177"></a>          <span class="st">"g80(F(), m, o) = g81(m, o)"</span>;</span>
-<span id="cb7-178"><a href="#cb7-178"></a>          <span class="st">"g80(T(), m, o) = g83(m, o)"</span>;</span>
-<span id="cb7-179"><a href="#cb7-179"></a>          <span class="st">"g81(F(), o) = F()"</span>;</span>
-<span id="cb7-180"><a href="#cb7-180"></a>          <span class="st">"g81(T(), o) = g82(o)"</span>;</span>
-<span id="cb7-181"><a href="#cb7-181"></a>          <span class="st">"g82(F()) = F()"</span>;</span>
-<span id="cb7-182"><a href="#cb7-182"></a>          <span class="st">"g82(T()) = F()"</span>;</span>
-<span id="cb7-183"><a href="#cb7-183"></a>          <span class="st">"g83(F(), o) = F()"</span>;</span>
-<span id="cb7-184"><a href="#cb7-184"></a>          <span class="st">"g83(T(), o) = g84(o)"</span>;</span>
-<span id="cb7-185"><a href="#cb7-185"></a>          <span class="st">"g84(F()) = F()"</span>;</span>
-<span id="cb7-186"><a href="#cb7-186"></a>          <span class="st">"g84(T()) = F()"</span>;</span>
-<span id="cb7-187"><a href="#cb7-187"></a>          <span class="st">"g85(F(), i, k, l, m, n, o, p) = g86(i)"</span>;</span>
-<span id="cb7-188"><a href="#cb7-188"></a>          <span class="st">"g85(T(), i, k, l, m, n, o, p) = g87(n, i, k, l, m, o, p)"</span>;</span>
-<span id="cb7-189"><a href="#cb7-189"></a>          <span class="st">"g86(F()) = F()"</span>;</span>
-<span id="cb7-190"><a href="#cb7-190"></a>          <span class="st">"g86(T()) = F()"</span>;</span>
-<span id="cb7-191"><a href="#cb7-191"></a>          <span class="st">"g87(F(), i, k, l, m, o, p) = g88(i, k, l, m, o, p)"</span>;</span>
-<span id="cb7-192"><a href="#cb7-192"></a>          <span class="st">"g87(T(), i, k, l, m, o, p) = F()"</span>;</span>
-<span id="cb7-193"><a href="#cb7-193"></a>          <span class="st">"g88(F(), k, l, m, o, p) = F()"</span>;</span>
-<span id="cb7-194"><a href="#cb7-194"></a>          <span class="st">"g88(T(), k, l, m, o, p) = g89(k, l, m, o, p)"</span>;</span>
-<span id="cb7-195"><a href="#cb7-195"></a>          <span class="st">"g89(F(), l, m, o, p) = g90(l, m, o, p)"</span>;</span>
-<span id="cb7-196"><a href="#cb7-196"></a>          <span class="st">"g89(T(), l, m, o, p) = F()"</span>;</span>
-<span id="cb7-197"><a href="#cb7-197"></a>          <span class="st">"g9(F(), h, i, k, l, m, n, o, p) = g10(p, h, i, k, l, m, n, o)"</span>;</span>
-<span id="cb7-198"><a href="#cb7-198"></a>          <span class="st">"g9(T(), h, i, k, l, m, n, o, p) = g21(h, i, k, l, m, n, o, p)"</span>;</span>
-<span id="cb7-199"><a href="#cb7-199"></a>          <span class="st">"g90(F(), m, o, p) = F()"</span>;</span>
-<span id="cb7-200"><a href="#cb7-200"></a>          <span class="st">"g90(T(), m, o, p) = g91(m, o, p)"</span>;</span>
-<span id="cb7-201"><a href="#cb7-201"></a>          <span class="st">"g91(F(), o, p) = F()"</span>;</span>
-<span id="cb7-202"><a href="#cb7-202"></a>          <span class="st">"g91(T(), o, p) = g92(o, p)"</span>;</span>
-<span id="cb7-203"><a href="#cb7-203"></a>          <span class="st">"g92(F(), p) = g93(p)"</span>;</span>
-<span id="cb7-204"><a href="#cb7-204"></a>          <span class="st">"g92(T(), p) = F()"</span>;</span>
-<span id="cb7-205"><a href="#cb7-205"></a>          <span class="st">"g93(F()) = F()"</span>;</span>
-<span id="cb7-206"><a href="#cb7-206"></a>          <span class="st">"g93(T()) = T()"</span>;</span>
-<span id="cb7-207"><a href="#cb7-207"></a>        ] )</span>
-<span id="cb7-208"><a href="#cb7-208"></a>    (formula</span>
-<span id="cb7-209"><a href="#cb7-209"></a>       [</span>
-<span id="cb7-210"><a href="#cb7-210"></a>         clause [ `Var <span class="st">"a"</span>; `Var <span class="st">"b"</span> ];</span>
-<span id="cb7-211"><a href="#cb7-211"></a>         clause [ `Not <span class="st">"b"</span>; `Not <span class="st">"d"</span> ];</span>
-<span id="cb7-212"><a href="#cb7-212"></a>         clause [ `Var <span class="st">"c"</span>; `Var <span class="st">"d"</span> ];</span>
-<span id="cb7-213"><a href="#cb7-213"></a>         clause [ `Not <span class="st">"d"</span>; `Not <span class="st">"e"</span> ];</span>
-<span id="cb7-214"><a href="#cb7-214"></a>         clause [ `Var <span class="st">"e"</span>; `Not <span class="st">"f"</span> ];</span>
-<span id="cb7-215"><a href="#cb7-215"></a>         clause [ `Var <span class="st">"f"</span>; `Not <span class="st">"g"</span> ];</span>
-<span id="cb7-216"><a href="#cb7-216"></a>         clause [ `Var <span class="st">"f"</span>; `Var <span class="st">"g"</span> ];</span>
-<span id="cb7-217"><a href="#cb7-217"></a>         clause [ `Var <span class="st">"g"</span>; `Not <span class="st">"p"</span> ];</span>
-<span id="cb7-218"><a href="#cb7-218"></a>         clause [ `Var <span class="st">"h"</span>; `Not <span class="st">"i"</span> ];</span>
-<span id="cb7-219"><a href="#cb7-219"></a>         clause [ `Not <span class="st">"h"</span>; `Not <span class="st">"n"</span> ];</span>
-<span id="cb7-220"><a href="#cb7-220"></a>         clause [ `Var <span class="st">"i"</span>; `Var <span class="st">"g"</span> ];</span>
-<span id="cb7-221"><a href="#cb7-221"></a>         clause [ `Var <span class="st">"i"</span>; `Not <span class="st">"g"</span> ];</span>
-<span id="cb7-222"><a href="#cb7-222"></a>         clause [ `Not <span class="st">"g"</span>; `Not <span class="st">"k"</span> ];</span>
-<span id="cb7-223"><a href="#cb7-223"></a>         clause [ `Var <span class="st">"g"</span>; `Var <span class="st">"l"</span> ];</span>
-<span id="cb7-224"><a href="#cb7-224"></a>         clause [ `Var <span class="st">"k"</span>; `Var <span class="st">"l"</span> ];</span>
-<span id="cb7-225"><a href="#cb7-225"></a>         clause [ `Var <span class="st">"m"</span>; `Var <span class="st">"n"</span> ];</span>
-<span id="cb7-226"><a href="#cb7-226"></a>         clause [ `Var <span class="st">"n"</span>; `Not <span class="st">"o"</span> ];</span>
-<span id="cb7-227"><a href="#cb7-227"></a>         clause [ `Var <span class="st">"o"</span>; `Var <span class="st">"p"</span> ];</span>
-<span id="cb7-228"><a href="#cb7-228"></a>       ]);</span></code></pre></div>
-</details><p>Ditto.</p><p>Testing “x AND NOT x”:</p><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb8-1"><a href="#cb8-1"></a>  check</span>
-<span id="cb8-2"><a href="#cb8-2"></a>    ~expected:(<span class="st">"g0(x)"</span>, [ <span class="st">"g0(F()) = F()"</span>; <span class="st">"g0(T()) = F()"</span> ])</span>
-<span id="cb8-3"><a href="#cb8-3"></a>    (formula [ clause [ `Var <span class="st">"x"</span> ]; clause [ `Not <span class="st">"x"</span> ] ]);</span></code></pre></div><p>Since there is no path in <code>g0</code> that leads to
-<code>T</code>, the formula is <strong>unsatisfiable</strong>.</p><p>Testing “x AND (y OR z) AND NOT x”:</p><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb9-1"><a href="#cb9-1"></a>  check</span>
-<span id="cb9-2"><a href="#cb9-2"></a>    ~expected:</span>
-<span id="cb9-3"><a href="#cb9-3"></a>      ( <span class="st">"g0(x, y, z)"</span>,</span>
-<span id="cb9-4"><a href="#cb9-4"></a>        [</span>
-<span id="cb9-5"><a href="#cb9-5"></a>          <span class="st">"g0(F(), y, z) = F()"</span>;</span>
-<span id="cb9-6"><a href="#cb9-6"></a>          <span class="st">"g0(T(), y, z) = g1(y, z)"</span>;</span>
-<span id="cb9-7"><a href="#cb9-7"></a>          <span class="st">"g1(F(), z) = g2(z)"</span>;</span>
-<span id="cb9-8"><a href="#cb9-8"></a>          <span class="st">"g1(T(), z) = F()"</span>;</span>
-<span id="cb9-9"><a href="#cb9-9"></a>          <span class="st">"g2(F()) = F()"</span>;</span>
-<span id="cb9-10"><a href="#cb9-10"></a>          <span class="st">"g2(T()) = F()"</span>;</span>
-<span id="cb9-11"><a href="#cb9-11"></a>        ] )</span>
-<span id="cb9-12"><a href="#cb9-12"></a>    (formula</span>
-<span id="cb9-13"><a href="#cb9-13"></a>       [</span>
-<span id="cb9-14"><a href="#cb9-14"></a>         clause [ `Var <span class="st">"x"</span> ]; clause [ `Var <span class="st">"y"</span>; `Var <span class="st">"z"</span> ]; clause [ `Not <span class="st">"x"</span> ];</span>
-<span id="cb9-15"><a href="#cb9-15"></a>       ]);</span></code></pre></div><p>Ditto.</p><p>Testing “(x OR x OR x) AND (NOT x OR NOT x OR NOT x)”:</p><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb10-1"><a href="#cb10-1"></a>  check</span>
-<span id="cb10-2"><a href="#cb10-2"></a>    ~expected:(<span class="st">"g0(x)"</span>, [ <span class="st">"g0(F()) = F()"</span>; <span class="st">"g0(T()) = F()"</span> ])</span>
-<span id="cb10-3"><a href="#cb10-3"></a>    (formula</span>
-<span id="cb10-4"><a href="#cb10-4"></a>       [</span>
-<span id="cb10-5"><a href="#cb10-5"></a>         clause [ `Var <span class="st">"x"</span>; `Var <span class="st">"x"</span>; `Var <span class="st">"x"</span> ];</span>
-<span id="cb10-6"><a href="#cb10-6"></a>         clause [ `Not <span class="st">"x"</span>; `Not <span class="st">"x"</span>; `Not <span class="st">"x"</span> ];</span>
-<span id="cb10-7"><a href="#cb10-7"></a>       ]);</span></code></pre></div><p>Ditto.</p><p>Testing “(x OR y OR z) AND (x OR y OR NOT z) AND (x OR NOT y OR z)
+<div class="sourceCode" id="cb7"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb7-1"><a href="#cb7-1" aria-label="1"></a>  check</span>
+<span id="cb7-2"><a href="#cb7-2" aria-label="2"></a>    ~expected:</span>
+<span id="cb7-3"><a href="#cb7-3" aria-label="3"></a>      ( <span class="st">"g0(a, b, c, d, e, f, g, h, i, k, l, m, n, o, p)"</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-label="4"></a>        [</span>
+<span id="cb7-5"><a href="#cb7-5" aria-label="5"></a>          <span class="st">"g0(F(), b, c, d, e, f, g, h, i, k, l, m, n, o, p) = g1(b, c, d, e, </span><span class="ch">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-label="6"></a><span class="st">           f, g, h, i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-7"><a href="#cb7-7" aria-label="7"></a>          <span class="st">"g0(T(), b, c, d, e, f, g, h, i, k, l, m, n, o, p) = g30(b, c, d, e, </span><span class="ch">\</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-label="8"></a><span class="st">           f, g, h, i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-9"><a href="#cb7-9" aria-label="9"></a>          <span class="st">"g1(F(), c, d, e, f, g, h, i, k, l, m, n, o, p) = F()"</span>;</span>
+<span id="cb7-10"><a href="#cb7-10" aria-label="10"></a>          <span class="st">"g1(T(), c, d, e, f, g, h, i, k, l, m, n, o, p) = g2(d, c, e, f, g, </span><span class="ch">\</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-label="11"></a><span class="st">           h, i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-12"><a href="#cb7-12" aria-label="12"></a>          <span class="st">"g10(F(), h, i, k, l, m, n, o) = g11(h, i, k, l, m, n, o)"</span>;</span>
+<span id="cb7-13"><a href="#cb7-13" aria-label="13"></a>          <span class="st">"g10(T(), h, i, k, l, m, n, o) = F()"</span>;</span>
+<span id="cb7-14"><a href="#cb7-14" aria-label="14"></a>          <span class="st">"g11(F(), i, k, l, m, n, o) = g12(i)"</span>;</span>
+<span id="cb7-15"><a href="#cb7-15" aria-label="15"></a>          <span class="st">"g11(T(), i, k, l, m, n, o) = g13(n, i, k, l, m, o)"</span>;</span>
+<span id="cb7-16"><a href="#cb7-16" aria-label="16"></a>          <span class="st">"g12(F()) = F()"</span>;</span>
+<span id="cb7-17"><a href="#cb7-17" aria-label="17"></a>          <span class="st">"g12(T()) = F()"</span>;</span>
+<span id="cb7-18"><a href="#cb7-18" aria-label="18"></a>          <span class="st">"g13(F(), i, k, l, m, o) = g14(i, k, l, m, o)"</span>;</span>
+<span id="cb7-19"><a href="#cb7-19" aria-label="19"></a>          <span class="st">"g13(T(), i, k, l, m, o) = F()"</span>;</span>
+<span id="cb7-20"><a href="#cb7-20" aria-label="20"></a>          <span class="st">"g14(F(), k, l, m, o) = F()"</span>;</span>
+<span id="cb7-21"><a href="#cb7-21" aria-label="21"></a>          <span class="st">"g14(T(), k, l, m, o) = g15(l, k, m, o)"</span>;</span>
+<span id="cb7-22"><a href="#cb7-22" aria-label="22"></a>          <span class="st">"g15(F(), k, m, o) = F()"</span>;</span>
+<span id="cb7-23"><a href="#cb7-23" aria-label="23"></a>          <span class="st">"g15(T(), k, m, o) = g16(k, m, o)"</span>;</span>
+<span id="cb7-24"><a href="#cb7-24" aria-label="24"></a>          <span class="st">"g16(F(), m, o) = g17(m, o)"</span>;</span>
+<span id="cb7-25"><a href="#cb7-25" aria-label="25"></a>          <span class="st">"g16(T(), m, o) = g19(m, o)"</span>;</span>
+<span id="cb7-26"><a href="#cb7-26" aria-label="26"></a>          <span class="st">"g17(F(), o) = F()"</span>;</span>
+<span id="cb7-27"><a href="#cb7-27" aria-label="27"></a>          <span class="st">"g17(T(), o) = g18(o)"</span>;</span>
+<span id="cb7-28"><a href="#cb7-28" aria-label="28"></a>          <span class="st">"g18(F()) = F()"</span>;</span>
+<span id="cb7-29"><a href="#cb7-29" aria-label="29"></a>          <span class="st">"g18(T()) = F()"</span>;</span>
+<span id="cb7-30"><a href="#cb7-30" aria-label="30"></a>          <span class="st">"g19(F(), o) = F()"</span>;</span>
+<span id="cb7-31"><a href="#cb7-31" aria-label="31"></a>          <span class="st">"g19(T(), o) = g20(o)"</span>;</span>
+<span id="cb7-32"><a href="#cb7-32" aria-label="32"></a>          <span class="st">"g2(F(), c, e, f, g, h, i, k, l, m, n, o, p) = g3(c, e, f, g, h, i, </span><span class="ch">\</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-label="33"></a><span class="st">           k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-34"><a href="#cb7-34" aria-label="34"></a>          <span class="st">"g2(T(), c, e, f, g, h, i, k, l, m, n, o, p) = F()"</span>;</span>
+<span id="cb7-35"><a href="#cb7-35" aria-label="35"></a>          <span class="st">"g20(F()) = F()"</span>;</span>
+<span id="cb7-36"><a href="#cb7-36" aria-label="36"></a>          <span class="st">"g20(T()) = F()"</span>;</span>
+<span id="cb7-37"><a href="#cb7-37" aria-label="37"></a>          <span class="st">"g21(F(), i, k, l, m, n, o, p) = g22(i)"</span>;</span>
+<span id="cb7-38"><a href="#cb7-38" aria-label="38"></a>          <span class="st">"g21(T(), i, k, l, m, n, o, p) = g23(n, i, k, l, m, o, p)"</span>;</span>
+<span id="cb7-39"><a href="#cb7-39" aria-label="39"></a>          <span class="st">"g22(F()) = F()"</span>;</span>
+<span id="cb7-40"><a href="#cb7-40" aria-label="40"></a>          <span class="st">"g22(T()) = F()"</span>;</span>
+<span id="cb7-41"><a href="#cb7-41" aria-label="41"></a>          <span class="st">"g23(F(), i, k, l, m, o, p) = g24(i, k, l, m, o, p)"</span>;</span>
+<span id="cb7-42"><a href="#cb7-42" aria-label="42"></a>          <span class="st">"g23(T(), i, k, l, m, o, p) = F()"</span>;</span>
+<span id="cb7-43"><a href="#cb7-43" aria-label="43"></a>          <span class="st">"g24(F(), k, l, m, o, p) = F()"</span>;</span>
+<span id="cb7-44"><a href="#cb7-44" aria-label="44"></a>          <span class="st">"g24(T(), k, l, m, o, p) = g25(k, l, m, o, p)"</span>;</span>
+<span id="cb7-45"><a href="#cb7-45" aria-label="45"></a>          <span class="st">"g25(F(), l, m, o, p) = g26(l, m, o, p)"</span>;</span>
+<span id="cb7-46"><a href="#cb7-46" aria-label="46"></a>          <span class="st">"g25(T(), l, m, o, p) = F()"</span>;</span>
+<span id="cb7-47"><a href="#cb7-47" aria-label="47"></a>          <span class="st">"g26(F(), m, o, p) = F()"</span>;</span>
+<span id="cb7-48"><a href="#cb7-48" aria-label="48"></a>          <span class="st">"g26(T(), m, o, p) = g27(m, o, p)"</span>;</span>
+<span id="cb7-49"><a href="#cb7-49" aria-label="49"></a>          <span class="st">"g27(F(), o, p) = F()"</span>;</span>
+<span id="cb7-50"><a href="#cb7-50" aria-label="50"></a>          <span class="st">"g27(T(), o, p) = g28(o, p)"</span>;</span>
+<span id="cb7-51"><a href="#cb7-51" aria-label="51"></a>          <span class="st">"g28(F(), p) = g29(p)"</span>;</span>
+<span id="cb7-52"><a href="#cb7-52" aria-label="52"></a>          <span class="st">"g28(T(), p) = F()"</span>;</span>
+<span id="cb7-53"><a href="#cb7-53" aria-label="53"></a>          <span class="st">"g29(F()) = F()"</span>;</span>
+<span id="cb7-54"><a href="#cb7-54" aria-label="54"></a>          <span class="st">"g29(T()) = T()"</span>;</span>
+<span id="cb7-55"><a href="#cb7-55" aria-label="55"></a>          <span class="st">"g3(F(), e, f, g, h, i, k, l, m, n, o, p) = F()"</span>;</span>
+<span id="cb7-56"><a href="#cb7-56" aria-label="56"></a>          <span class="st">"g3(T(), e, f, g, h, i, k, l, m, n, o, p) = g4(e, f, g, h, i, k, l, </span><span class="ch">\</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-label="57"></a><span class="st">           m, n, o, p)"</span>;</span>
+<span id="cb7-58"><a href="#cb7-58" aria-label="58"></a>          <span class="st">"g30(F(), c, d, e, f, g, h, i, k, l, m, n, o, p) = g31(c, d, e, f, </span><span class="ch">\</span></span>
+<span id="cb7-59"><a href="#cb7-59" aria-label="59"></a><span class="st">           g, h, i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-60"><a href="#cb7-60" aria-label="60"></a>          <span class="st">"g30(T(), c, d, e, f, g, h, i, k, l, m, n, o, p) = g66(d, c, e, f, </span><span class="ch">\</span></span>
+<span id="cb7-61"><a href="#cb7-61" aria-label="61"></a><span class="st">           g, h, i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-62"><a href="#cb7-62" aria-label="62"></a>          <span class="st">"g31(F(), d, e, f, g, h, i, k, l, m, n, o, p) = g32(d, e, f, g)"</span>;</span>
+<span id="cb7-63"><a href="#cb7-63" aria-label="63"></a>          <span class="st">"g31(T(), d, e, f, g, h, i, k, l, m, n, o, p) = g36(d, e, f, g, h, </span><span class="ch">\</span></span>
+<span id="cb7-64"><a href="#cb7-64" aria-label="64"></a><span class="st">           i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-65"><a href="#cb7-65" aria-label="65"></a>          <span class="st">"g32(F(), e, f, g) = F()"</span>;</span>
+<span id="cb7-66"><a href="#cb7-66" aria-label="66"></a>          <span class="st">"g32(T(), e, f, g) = g33(e, f, g)"</span>;</span>
+<span id="cb7-67"><a href="#cb7-67" aria-label="67"></a>          <span class="st">"g33(F(), f, g) = g34(f, g)"</span>;</span>
+<span id="cb7-68"><a href="#cb7-68" aria-label="68"></a>          <span class="st">"g33(T(), f, g) = F()"</span>;</span>
+<span id="cb7-69"><a href="#cb7-69" aria-label="69"></a>          <span class="st">"g34(F(), g) = g35(g)"</span>;</span>
+<span id="cb7-70"><a href="#cb7-70" aria-label="70"></a>          <span class="st">"g34(T(), g) = F()"</span>;</span>
+<span id="cb7-71"><a href="#cb7-71" aria-label="71"></a>          <span class="st">"g35(F()) = F()"</span>;</span>
+<span id="cb7-72"><a href="#cb7-72" aria-label="72"></a>          <span class="st">"g35(T()) = F()"</span>;</span>
+<span id="cb7-73"><a href="#cb7-73" aria-label="73"></a>          <span class="st">"g36(F(), e, f, g, h, i, k, l, m, n, o, p) = g37(e, f, g, h, i, k, </span><span class="ch">\</span></span>
+<span id="cb7-74"><a href="#cb7-74" aria-label="74"></a><span class="st">           l, m, n, o, p)"</span>;</span>
+<span id="cb7-75"><a href="#cb7-75" aria-label="75"></a>          <span class="st">"g36(T(), e, f, g, h, i, k, l, m, n, o, p) = g63(e, f, g)"</span>;</span>
+<span id="cb7-76"><a href="#cb7-76" aria-label="76"></a>          <span class="st">"g37(F(), f, g, h, i, k, l, m, n, o, p) = g38(f, g)"</span>;</span>
+<span id="cb7-77"><a href="#cb7-77" aria-label="77"></a>          <span class="st">"g37(T(), f, g, h, i, k, l, m, n, o, p) = g40(f, g, h, i, k, l, m, </span><span class="ch">\</span></span>
+<span id="cb7-78"><a href="#cb7-78" aria-label="78"></a><span class="st">           n, o, p)"</span>;</span>
+<span id="cb7-79"><a href="#cb7-79" aria-label="79"></a>          <span class="st">"g38(F(), g) = g39(g)"</span>;</span>
+<span id="cb7-80"><a href="#cb7-80" aria-label="80"></a>          <span class="st">"g38(T(), g) = F()"</span>;</span>
+<span id="cb7-81"><a href="#cb7-81" aria-label="81"></a>          <span class="st">"g39(F()) = F()"</span>;</span>
+<span id="cb7-82"><a href="#cb7-82" aria-label="82"></a>          <span class="st">"g39(T()) = F()"</span>;</span>
+<span id="cb7-83"><a href="#cb7-83" aria-label="83"></a>          <span class="st">"g4(F(), f, g, h, i, k, l, m, n, o, p) = g5(f, g)"</span>;</span>
+<span id="cb7-84"><a href="#cb7-84" aria-label="84"></a>          <span class="st">"g4(T(), f, g, h, i, k, l, m, n, o, p) = g7(f, g, h, i, k, l, m, n, </span><span class="ch">\</span></span>
+<span id="cb7-85"><a href="#cb7-85" aria-label="85"></a><span class="st">           o, p)"</span>;</span>
+<span id="cb7-86"><a href="#cb7-86" aria-label="86"></a>          <span class="st">"g40(F(), g, h, i, k, l, m, n, o, p) = g41(g)"</span>;</span>
+<span id="cb7-87"><a href="#cb7-87" aria-label="87"></a>          <span class="st">"g40(T(), g, h, i, k, l, m, n, o, p) = g42(g, h, i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-88"><a href="#cb7-88" aria-label="88"></a>          <span class="st">"g41(F()) = F()"</span>;</span>
+<span id="cb7-89"><a href="#cb7-89" aria-label="89"></a>          <span class="st">"g41(T()) = F()"</span>;</span>
+<span id="cb7-90"><a href="#cb7-90" aria-label="90"></a>          <span class="st">"g42(F(), h, i, k, l, m, n, o, p) = g43(p, h, i, k, l, m, n, o)"</span>;</span>
+<span id="cb7-91"><a href="#cb7-91" aria-label="91"></a>          <span class="st">"g42(T(), h, i, k, l, m, n, o, p) = g54(h, i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-92"><a href="#cb7-92" aria-label="92"></a>          <span class="st">"g43(F(), h, i, k, l, m, n, o) = g44(h, i, k, l, m, n, o)"</span>;</span>
+<span id="cb7-93"><a href="#cb7-93" aria-label="93"></a>          <span class="st">"g43(T(), h, i, k, l, m, n, o) = F()"</span>;</span>
+<span id="cb7-94"><a href="#cb7-94" aria-label="94"></a>          <span class="st">"g44(F(), i, k, l, m, n, o) = g45(i)"</span>;</span>
+<span id="cb7-95"><a href="#cb7-95" aria-label="95"></a>          <span class="st">"g44(T(), i, k, l, m, n, o) = g46(n, i, k, l, m, o)"</span>;</span>
+<span id="cb7-96"><a href="#cb7-96" aria-label="96"></a>          <span class="st">"g45(F()) = F()"</span>;</span>
+<span id="cb7-97"><a href="#cb7-97" aria-label="97"></a>          <span class="st">"g45(T()) = F()"</span>;</span>
+<span id="cb7-98"><a href="#cb7-98" aria-label="98"></a>          <span class="st">"g46(F(), i, k, l, m, o) = g47(i, k, l, m, o)"</span>;</span>
+<span id="cb7-99"><a href="#cb7-99" aria-label="99"></a>          <span class="st">"g46(T(), i, k, l, m, o) = F()"</span>;</span>
+<span id="cb7-100"><a href="#cb7-100" aria-label="100"></a>          <span class="st">"g47(F(), k, l, m, o) = F()"</span>;</span>
+<span id="cb7-101"><a href="#cb7-101" aria-label="101"></a>          <span class="st">"g47(T(), k, l, m, o) = g48(l, k, m, o)"</span>;</span>
+<span id="cb7-102"><a href="#cb7-102" aria-label="102"></a>          <span class="st">"g48(F(), k, m, o) = F()"</span>;</span>
+<span id="cb7-103"><a href="#cb7-103" aria-label="103"></a>          <span class="st">"g48(T(), k, m, o) = g49(k, m, o)"</span>;</span>
+<span id="cb7-104"><a href="#cb7-104" aria-label="104"></a>          <span class="st">"g49(F(), m, o) = g50(m, o)"</span>;</span>
+<span id="cb7-105"><a href="#cb7-105" aria-label="105"></a>          <span class="st">"g49(T(), m, o) = g52(m, o)"</span>;</span>
+<span id="cb7-106"><a href="#cb7-106" aria-label="106"></a>          <span class="st">"g5(F(), g) = g6(g)"</span>;</span>
+<span id="cb7-107"><a href="#cb7-107" aria-label="107"></a>          <span class="st">"g5(T(), g) = F()"</span>;</span>
+<span id="cb7-108"><a href="#cb7-108" aria-label="108"></a>          <span class="st">"g50(F(), o) = F()"</span>;</span>
+<span id="cb7-109"><a href="#cb7-109" aria-label="109"></a>          <span class="st">"g50(T(), o) = g51(o)"</span>;</span>
+<span id="cb7-110"><a href="#cb7-110" aria-label="110"></a>          <span class="st">"g51(F()) = F()"</span>;</span>
+<span id="cb7-111"><a href="#cb7-111" aria-label="111"></a>          <span class="st">"g51(T()) = F()"</span>;</span>
+<span id="cb7-112"><a href="#cb7-112" aria-label="112"></a>          <span class="st">"g52(F(), o) = F()"</span>;</span>
+<span id="cb7-113"><a href="#cb7-113" aria-label="113"></a>          <span class="st">"g52(T(), o) = g53(o)"</span>;</span>
+<span id="cb7-114"><a href="#cb7-114" aria-label="114"></a>          <span class="st">"g53(F()) = F()"</span>;</span>
+<span id="cb7-115"><a href="#cb7-115" aria-label="115"></a>          <span class="st">"g53(T()) = F()"</span>;</span>
+<span id="cb7-116"><a href="#cb7-116" aria-label="116"></a>          <span class="st">"g54(F(), i, k, l, m, n, o, p) = g55(i)"</span>;</span>
+<span id="cb7-117"><a href="#cb7-117" aria-label="117"></a>          <span class="st">"g54(T(), i, k, l, m, n, o, p) = g56(n, i, k, l, m, o, p)"</span>;</span>
+<span id="cb7-118"><a href="#cb7-118" aria-label="118"></a>          <span class="st">"g55(F()) = F()"</span>;</span>
+<span id="cb7-119"><a href="#cb7-119" aria-label="119"></a>          <span class="st">"g55(T()) = F()"</span>;</span>
+<span id="cb7-120"><a href="#cb7-120" aria-label="120"></a>          <span class="st">"g56(F(), i, k, l, m, o, p) = g57(i, k, l, m, o, p)"</span>;</span>
+<span id="cb7-121"><a href="#cb7-121" aria-label="121"></a>          <span class="st">"g56(T(), i, k, l, m, o, p) = F()"</span>;</span>
+<span id="cb7-122"><a href="#cb7-122" aria-label="122"></a>          <span class="st">"g57(F(), k, l, m, o, p) = F()"</span>;</span>
+<span id="cb7-123"><a href="#cb7-123" aria-label="123"></a>          <span class="st">"g57(T(), k, l, m, o, p) = g58(k, l, m, o, p)"</span>;</span>
+<span id="cb7-124"><a href="#cb7-124" aria-label="124"></a>          <span class="st">"g58(F(), l, m, o, p) = g59(l, m, o, p)"</span>;</span>
+<span id="cb7-125"><a href="#cb7-125" aria-label="125"></a>          <span class="st">"g58(T(), l, m, o, p) = F()"</span>;</span>
+<span id="cb7-126"><a href="#cb7-126" aria-label="126"></a>          <span class="st">"g59(F(), m, o, p) = F()"</span>;</span>
+<span id="cb7-127"><a href="#cb7-127" aria-label="127"></a>          <span class="st">"g59(T(), m, o, p) = g60(m, o, p)"</span>;</span>
+<span id="cb7-128"><a href="#cb7-128" aria-label="128"></a>          <span class="st">"g6(F()) = F()"</span>;</span>
+<span id="cb7-129"><a href="#cb7-129" aria-label="129"></a>          <span class="st">"g6(T()) = F()"</span>;</span>
+<span id="cb7-130"><a href="#cb7-130" aria-label="130"></a>          <span class="st">"g60(F(), o, p) = F()"</span>;</span>
+<span id="cb7-131"><a href="#cb7-131" aria-label="131"></a>          <span class="st">"g60(T(), o, p) = g61(o, p)"</span>;</span>
+<span id="cb7-132"><a href="#cb7-132" aria-label="132"></a>          <span class="st">"g61(F(), p) = g62(p)"</span>;</span>
+<span id="cb7-133"><a href="#cb7-133" aria-label="133"></a>          <span class="st">"g61(T(), p) = F()"</span>;</span>
+<span id="cb7-134"><a href="#cb7-134" aria-label="134"></a>          <span class="st">"g62(F()) = F()"</span>;</span>
+<span id="cb7-135"><a href="#cb7-135" aria-label="135"></a>          <span class="st">"g62(T()) = T()"</span>;</span>
+<span id="cb7-136"><a href="#cb7-136" aria-label="136"></a>          <span class="st">"g63(F(), f, g) = g64(f, g)"</span>;</span>
+<span id="cb7-137"><a href="#cb7-137" aria-label="137"></a>          <span class="st">"g63(T(), f, g) = F()"</span>;</span>
+<span id="cb7-138"><a href="#cb7-138" aria-label="138"></a>          <span class="st">"g64(F(), g) = g65(g)"</span>;</span>
+<span id="cb7-139"><a href="#cb7-139" aria-label="139"></a>          <span class="st">"g64(T(), g) = F()"</span>;</span>
+<span id="cb7-140"><a href="#cb7-140" aria-label="140"></a>          <span class="st">"g65(F()) = F()"</span>;</span>
+<span id="cb7-141"><a href="#cb7-141" aria-label="141"></a>          <span class="st">"g65(T()) = F()"</span>;</span>
+<span id="cb7-142"><a href="#cb7-142" aria-label="142"></a>          <span class="st">"g66(F(), c, e, f, g, h, i, k, l, m, n, o, p) = g67(c, e, f, g, h, </span><span class="ch">\</span></span>
+<span id="cb7-143"><a href="#cb7-143" aria-label="143"></a><span class="st">           i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-144"><a href="#cb7-144" aria-label="144"></a>          <span class="st">"g66(T(), c, e, f, g, h, i, k, l, m, n, o, p) = F()"</span>;</span>
+<span id="cb7-145"><a href="#cb7-145" aria-label="145"></a>          <span class="st">"g67(F(), e, f, g, h, i, k, l, m, n, o, p) = F()"</span>;</span>
+<span id="cb7-146"><a href="#cb7-146" aria-label="146"></a>          <span class="st">"g67(T(), e, f, g, h, i, k, l, m, n, o, p) = g68(e, f, g, h, i, k, </span><span class="ch">\</span></span>
+<span id="cb7-147"><a href="#cb7-147" aria-label="147"></a><span class="st">           l, m, n, o, p)"</span>;</span>
+<span id="cb7-148"><a href="#cb7-148" aria-label="148"></a>          <span class="st">"g68(F(), f, g, h, i, k, l, m, n, o, p) = g69(f, g)"</span>;</span>
+<span id="cb7-149"><a href="#cb7-149" aria-label="149"></a>          <span class="st">"g68(T(), f, g, h, i, k, l, m, n, o, p) = g71(f, g, h, i, k, l, m, </span><span class="ch">\</span></span>
+<span id="cb7-150"><a href="#cb7-150" aria-label="150"></a><span class="st">           n, o, p)"</span>;</span>
+<span id="cb7-151"><a href="#cb7-151" aria-label="151"></a>          <span class="st">"g69(F(), g) = g70(g)"</span>;</span>
+<span id="cb7-152"><a href="#cb7-152" aria-label="152"></a>          <span class="st">"g69(T(), g) = F()"</span>;</span>
+<span id="cb7-153"><a href="#cb7-153" aria-label="153"></a>          <span class="st">"g7(F(), g, h, i, k, l, m, n, o, p) = g8(g)"</span>;</span>
+<span id="cb7-154"><a href="#cb7-154" aria-label="154"></a>          <span class="st">"g7(T(), g, h, i, k, l, m, n, o, p) = g9(g, h, i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-155"><a href="#cb7-155" aria-label="155"></a>          <span class="st">"g70(F()) = F()"</span>;</span>
+<span id="cb7-156"><a href="#cb7-156" aria-label="156"></a>          <span class="st">"g70(T()) = F()"</span>;</span>
+<span id="cb7-157"><a href="#cb7-157" aria-label="157"></a>          <span class="st">"g71(F(), g, h, i, k, l, m, n, o, p) = g72(g)"</span>;</span>
+<span id="cb7-158"><a href="#cb7-158" aria-label="158"></a>          <span class="st">"g71(T(), g, h, i, k, l, m, n, o, p) = g73(g, h, i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-159"><a href="#cb7-159" aria-label="159"></a>          <span class="st">"g72(F()) = F()"</span>;</span>
+<span id="cb7-160"><a href="#cb7-160" aria-label="160"></a>          <span class="st">"g72(T()) = F()"</span>;</span>
+<span id="cb7-161"><a href="#cb7-161" aria-label="161"></a>          <span class="st">"g73(F(), h, i, k, l, m, n, o, p) = g74(p, h, i, k, l, m, n, o)"</span>;</span>
+<span id="cb7-162"><a href="#cb7-162" aria-label="162"></a>          <span class="st">"g73(T(), h, i, k, l, m, n, o, p) = g85(h, i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-163"><a href="#cb7-163" aria-label="163"></a>          <span class="st">"g74(F(), h, i, k, l, m, n, o) = g75(h, i, k, l, m, n, o)"</span>;</span>
+<span id="cb7-164"><a href="#cb7-164" aria-label="164"></a>          <span class="st">"g74(T(), h, i, k, l, m, n, o) = F()"</span>;</span>
+<span id="cb7-165"><a href="#cb7-165" aria-label="165"></a>          <span class="st">"g75(F(), i, k, l, m, n, o) = g76(i)"</span>;</span>
+<span id="cb7-166"><a href="#cb7-166" aria-label="166"></a>          <span class="st">"g75(T(), i, k, l, m, n, o) = g77(n, i, k, l, m, o)"</span>;</span>
+<span id="cb7-167"><a href="#cb7-167" aria-label="167"></a>          <span class="st">"g76(F()) = F()"</span>;</span>
+<span id="cb7-168"><a href="#cb7-168" aria-label="168"></a>          <span class="st">"g76(T()) = F()"</span>;</span>
+<span id="cb7-169"><a href="#cb7-169" aria-label="169"></a>          <span class="st">"g77(F(), i, k, l, m, o) = g78(i, k, l, m, o)"</span>;</span>
+<span id="cb7-170"><a href="#cb7-170" aria-label="170"></a>          <span class="st">"g77(T(), i, k, l, m, o) = F()"</span>;</span>
+<span id="cb7-171"><a href="#cb7-171" aria-label="171"></a>          <span class="st">"g78(F(), k, l, m, o) = F()"</span>;</span>
+<span id="cb7-172"><a href="#cb7-172" aria-label="172"></a>          <span class="st">"g78(T(), k, l, m, o) = g79(l, k, m, o)"</span>;</span>
+<span id="cb7-173"><a href="#cb7-173" aria-label="173"></a>          <span class="st">"g79(F(), k, m, o) = F()"</span>;</span>
+<span id="cb7-174"><a href="#cb7-174" aria-label="174"></a>          <span class="st">"g79(T(), k, m, o) = g80(k, m, o)"</span>;</span>
+<span id="cb7-175"><a href="#cb7-175" aria-label="175"></a>          <span class="st">"g8(F()) = F()"</span>;</span>
+<span id="cb7-176"><a href="#cb7-176" aria-label="176"></a>          <span class="st">"g8(T()) = F()"</span>;</span>
+<span id="cb7-177"><a href="#cb7-177" aria-label="177"></a>          <span class="st">"g80(F(), m, o) = g81(m, o)"</span>;</span>
+<span id="cb7-178"><a href="#cb7-178" aria-label="178"></a>          <span class="st">"g80(T(), m, o) = g83(m, o)"</span>;</span>
+<span id="cb7-179"><a href="#cb7-179" aria-label="179"></a>          <span class="st">"g81(F(), o) = F()"</span>;</span>
+<span id="cb7-180"><a href="#cb7-180" aria-label="180"></a>          <span class="st">"g81(T(), o) = g82(o)"</span>;</span>
+<span id="cb7-181"><a href="#cb7-181" aria-label="181"></a>          <span class="st">"g82(F()) = F()"</span>;</span>
+<span id="cb7-182"><a href="#cb7-182" aria-label="182"></a>          <span class="st">"g82(T()) = F()"</span>;</span>
+<span id="cb7-183"><a href="#cb7-183" aria-label="183"></a>          <span class="st">"g83(F(), o) = F()"</span>;</span>
+<span id="cb7-184"><a href="#cb7-184" aria-label="184"></a>          <span class="st">"g83(T(), o) = g84(o)"</span>;</span>
+<span id="cb7-185"><a href="#cb7-185" aria-label="185"></a>          <span class="st">"g84(F()) = F()"</span>;</span>
+<span id="cb7-186"><a href="#cb7-186" aria-label="186"></a>          <span class="st">"g84(T()) = F()"</span>;</span>
+<span id="cb7-187"><a href="#cb7-187" aria-label="187"></a>          <span class="st">"g85(F(), i, k, l, m, n, o, p) = g86(i)"</span>;</span>
+<span id="cb7-188"><a href="#cb7-188" aria-label="188"></a>          <span class="st">"g85(T(), i, k, l, m, n, o, p) = g87(n, i, k, l, m, o, p)"</span>;</span>
+<span id="cb7-189"><a href="#cb7-189" aria-label="189"></a>          <span class="st">"g86(F()) = F()"</span>;</span>
+<span id="cb7-190"><a href="#cb7-190" aria-label="190"></a>          <span class="st">"g86(T()) = F()"</span>;</span>
+<span id="cb7-191"><a href="#cb7-191" aria-label="191"></a>          <span class="st">"g87(F(), i, k, l, m, o, p) = g88(i, k, l, m, o, p)"</span>;</span>
+<span id="cb7-192"><a href="#cb7-192" aria-label="192"></a>          <span class="st">"g87(T(), i, k, l, m, o, p) = F()"</span>;</span>
+<span id="cb7-193"><a href="#cb7-193" aria-label="193"></a>          <span class="st">"g88(F(), k, l, m, o, p) = F()"</span>;</span>
+<span id="cb7-194"><a href="#cb7-194" aria-label="194"></a>          <span class="st">"g88(T(), k, l, m, o, p) = g89(k, l, m, o, p)"</span>;</span>
+<span id="cb7-195"><a href="#cb7-195" aria-label="195"></a>          <span class="st">"g89(F(), l, m, o, p) = g90(l, m, o, p)"</span>;</span>
+<span id="cb7-196"><a href="#cb7-196" aria-label="196"></a>          <span class="st">"g89(T(), l, m, o, p) = F()"</span>;</span>
+<span id="cb7-197"><a href="#cb7-197" aria-label="197"></a>          <span class="st">"g9(F(), h, i, k, l, m, n, o, p) = g10(p, h, i, k, l, m, n, o)"</span>;</span>
+<span id="cb7-198"><a href="#cb7-198" aria-label="198"></a>          <span class="st">"g9(T(), h, i, k, l, m, n, o, p) = g21(h, i, k, l, m, n, o, p)"</span>;</span>
+<span id="cb7-199"><a href="#cb7-199" aria-label="199"></a>          <span class="st">"g90(F(), m, o, p) = F()"</span>;</span>
+<span id="cb7-200"><a href="#cb7-200" aria-label="200"></a>          <span class="st">"g90(T(), m, o, p) = g91(m, o, p)"</span>;</span>
+<span id="cb7-201"><a href="#cb7-201" aria-label="201"></a>          <span class="st">"g91(F(), o, p) = F()"</span>;</span>
+<span id="cb7-202"><a href="#cb7-202" aria-label="202"></a>          <span class="st">"g91(T(), o, p) = g92(o, p)"</span>;</span>
+<span id="cb7-203"><a href="#cb7-203" aria-label="203"></a>          <span class="st">"g92(F(), p) = g93(p)"</span>;</span>
+<span id="cb7-204"><a href="#cb7-204" aria-label="204"></a>          <span class="st">"g92(T(), p) = F()"</span>;</span>
+<span id="cb7-205"><a href="#cb7-205" aria-label="205"></a>          <span class="st">"g93(F()) = F()"</span>;</span>
+<span id="cb7-206"><a href="#cb7-206" aria-label="206"></a>          <span class="st">"g93(T()) = T()"</span>;</span>
+<span id="cb7-207"><a href="#cb7-207" aria-label="207"></a>        ] )</span>
+<span id="cb7-208"><a href="#cb7-208" aria-label="208"></a>    (formula</span>
+<span id="cb7-209"><a href="#cb7-209" aria-label="209"></a>       [</span>
+<span id="cb7-210"><a href="#cb7-210" aria-label="210"></a>         clause [ `Var <span class="st">"a"</span>; `Var <span class="st">"b"</span> ];</span>
+<span id="cb7-211"><a href="#cb7-211" aria-label="211"></a>         clause [ `Not <span class="st">"b"</span>; `Not <span class="st">"d"</span> ];</span>
+<span id="cb7-212"><a href="#cb7-212" aria-label="212"></a>         clause [ `Var <span class="st">"c"</span>; `Var <span class="st">"d"</span> ];</span>
+<span id="cb7-213"><a href="#cb7-213" aria-label="213"></a>         clause [ `Not <span class="st">"d"</span>; `Not <span class="st">"e"</span> ];</span>
+<span id="cb7-214"><a href="#cb7-214" aria-label="214"></a>         clause [ `Var <span class="st">"e"</span>; `Not <span class="st">"f"</span> ];</span>
+<span id="cb7-215"><a href="#cb7-215" aria-label="215"></a>         clause [ `Var <span class="st">"f"</span>; `Not <span class="st">"g"</span> ];</span>
+<span id="cb7-216"><a href="#cb7-216" aria-label="216"></a>         clause [ `Var <span class="st">"f"</span>; `Var <span class="st">"g"</span> ];</span>
+<span id="cb7-217"><a href="#cb7-217" aria-label="217"></a>         clause [ `Var <span class="st">"g"</span>; `Not <span class="st">"p"</span> ];</span>
+<span id="cb7-218"><a href="#cb7-218" aria-label="218"></a>         clause [ `Var <span class="st">"h"</span>; `Not <span class="st">"i"</span> ];</span>
+<span id="cb7-219"><a href="#cb7-219" aria-label="219"></a>         clause [ `Not <span class="st">"h"</span>; `Not <span class="st">"n"</span> ];</span>
+<span id="cb7-220"><a href="#cb7-220" aria-label="220"></a>         clause [ `Var <span class="st">"i"</span>; `Var <span class="st">"g"</span> ];</span>
+<span id="cb7-221"><a href="#cb7-221" aria-label="221"></a>         clause [ `Var <span class="st">"i"</span>; `Not <span class="st">"g"</span> ];</span>
+<span id="cb7-222"><a href="#cb7-222" aria-label="222"></a>         clause [ `Not <span class="st">"g"</span>; `Not <span class="st">"k"</span> ];</span>
+<span id="cb7-223"><a href="#cb7-223" aria-label="223"></a>         clause [ `Var <span class="st">"g"</span>; `Var <span class="st">"l"</span> ];</span>
+<span id="cb7-224"><a href="#cb7-224" aria-label="224"></a>         clause [ `Var <span class="st">"k"</span>; `Var <span class="st">"l"</span> ];</span>
+<span id="cb7-225"><a href="#cb7-225" aria-label="225"></a>         clause [ `Var <span class="st">"m"</span>; `Var <span class="st">"n"</span> ];</span>
+<span id="cb7-226"><a href="#cb7-226" aria-label="226"></a>         clause [ `Var <span class="st">"n"</span>; `Not <span class="st">"o"</span> ];</span>
+<span id="cb7-227"><a href="#cb7-227" aria-label="227"></a>         clause [ `Var <span class="st">"o"</span>; `Var <span class="st">"p"</span> ];</span>
+<span id="cb7-228"><a href="#cb7-228" aria-label="228"></a>       ]);</span></code></pre></div>
+</details><p>Ditto.</p><p>Testing “x AND NOT x”:</p><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb8-1"><a href="#cb8-1" aria-label="1"></a>  check</span>
+<span id="cb8-2"><a href="#cb8-2" aria-label="2"></a>    ~expected:(<span class="st">"g0(x)"</span>, [ <span class="st">"g0(F()) = F()"</span>; <span class="st">"g0(T()) = F()"</span> ])</span>
+<span id="cb8-3"><a href="#cb8-3" aria-label="3"></a>    (formula [ clause [ `Var <span class="st">"x"</span> ]; clause [ `Not <span class="st">"x"</span> ] ]);</span></code></pre></div><p>Since there is no path in <code>g0</code> that leads to
+<code>T</code>, the formula is <strong>unsatisfiable</strong>.</p><p>Testing “x AND (y OR z) AND NOT x”:</p><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb9-1"><a href="#cb9-1" aria-label="1"></a>  check</span>
+<span id="cb9-2"><a href="#cb9-2" aria-label="2"></a>    ~expected:</span>
+<span id="cb9-3"><a href="#cb9-3" aria-label="3"></a>      ( <span class="st">"g0(x, y, z)"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-label="4"></a>        [</span>
+<span id="cb9-5"><a href="#cb9-5" aria-label="5"></a>          <span class="st">"g0(F(), y, z) = F()"</span>;</span>
+<span id="cb9-6"><a href="#cb9-6" aria-label="6"></a>          <span class="st">"g0(T(), y, z) = g1(y, z)"</span>;</span>
+<span id="cb9-7"><a href="#cb9-7" aria-label="7"></a>          <span class="st">"g1(F(), z) = g2(z)"</span>;</span>
+<span id="cb9-8"><a href="#cb9-8" aria-label="8"></a>          <span class="st">"g1(T(), z) = F()"</span>;</span>
+<span id="cb9-9"><a href="#cb9-9" aria-label="9"></a>          <span class="st">"g2(F()) = F()"</span>;</span>
+<span id="cb9-10"><a href="#cb9-10" aria-label="10"></a>          <span class="st">"g2(T()) = F()"</span>;</span>
+<span id="cb9-11"><a href="#cb9-11" aria-label="11"></a>        ] )</span>
+<span id="cb9-12"><a href="#cb9-12" aria-label="12"></a>    (formula</span>
+<span id="cb9-13"><a href="#cb9-13" aria-label="13"></a>       [</span>
+<span id="cb9-14"><a href="#cb9-14" aria-label="14"></a>         clause [ `Var <span class="st">"x"</span> ]; clause [ `Var <span class="st">"y"</span>; `Var <span class="st">"z"</span> ]; clause [ `Not <span class="st">"x"</span> ];</span>
+<span id="cb9-15"><a href="#cb9-15" aria-label="15"></a>       ]);</span></code></pre></div><p>Ditto.</p><p>Testing “(x OR x OR x) AND (NOT x OR NOT x OR NOT x)”:</p><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb10-1"><a href="#cb10-1" aria-label="1"></a>  check</span>
+<span id="cb10-2"><a href="#cb10-2" aria-label="2"></a>    ~expected:(<span class="st">"g0(x)"</span>, [ <span class="st">"g0(F()) = F()"</span>; <span class="st">"g0(T()) = F()"</span> ])</span>
+<span id="cb10-3"><a href="#cb10-3" aria-label="3"></a>    (formula</span>
+<span id="cb10-4"><a href="#cb10-4" aria-label="4"></a>       [</span>
+<span id="cb10-5"><a href="#cb10-5" aria-label="5"></a>         clause [ `Var <span class="st">"x"</span>; `Var <span class="st">"x"</span>; `Var <span class="st">"x"</span> ];</span>
+<span id="cb10-6"><a href="#cb10-6" aria-label="6"></a>         clause [ `Not <span class="st">"x"</span>; `Not <span class="st">"x"</span>; `Not <span class="st">"x"</span> ];</span>
+<span id="cb10-7"><a href="#cb10-7" aria-label="7"></a>       ]);</span></code></pre></div><p>Ditto.</p><p>Testing “(x OR y OR z) AND (x OR y OR NOT z) AND (x OR NOT y OR z)
 AND (x OR NOT y OR NOT z) AND (NOT x OR y OR z) AND (NOT x OR y OR NOT
-z) AND (NOT x OR NOT y OR z) AND (NOT x OR NOT y OR NOT z)”:</p><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb11-1"><a href="#cb11-1"></a>  check</span>
-<span id="cb11-2"><a href="#cb11-2"></a>    ~expected:</span>
-<span id="cb11-3"><a href="#cb11-3"></a>      ( <span class="st">"g0(x, y, z)"</span>,</span>
-<span id="cb11-4"><a href="#cb11-4"></a>        [</span>
-<span id="cb11-5"><a href="#cb11-5"></a>          <span class="st">"g0(F(), y, z) = g1(y, z)"</span>;</span>
-<span id="cb11-6"><a href="#cb11-6"></a>          <span class="st">"g0(T(), y, z) = g4(y, z)"</span>;</span>
-<span id="cb11-7"><a href="#cb11-7"></a>          <span class="st">"g1(F(), z) = g2(z)"</span>;</span>
-<span id="cb11-8"><a href="#cb11-8"></a>          <span class="st">"g1(T(), z) = g3(z)"</span>;</span>
-<span id="cb11-9"><a href="#cb11-9"></a>          <span class="st">"g2(F()) = F()"</span>;</span>
-<span id="cb11-10"><a href="#cb11-10"></a>          <span class="st">"g2(T()) = F()"</span>;</span>
-<span id="cb11-11"><a href="#cb11-11"></a>          <span class="st">"g3(F()) = F()"</span>;</span>
-<span id="cb11-12"><a href="#cb11-12"></a>          <span class="st">"g3(T()) = F()"</span>;</span>
-<span id="cb11-13"><a href="#cb11-13"></a>          <span class="st">"g4(F(), z) = g5(z)"</span>;</span>
-<span id="cb11-14"><a href="#cb11-14"></a>          <span class="st">"g4(T(), z) = g6(z)"</span>;</span>
-<span id="cb11-15"><a href="#cb11-15"></a>          <span class="st">"g5(F()) = F()"</span>;</span>
-<span id="cb11-16"><a href="#cb11-16"></a>          <span class="st">"g5(T()) = F()"</span>;</span>
-<span id="cb11-17"><a href="#cb11-17"></a>          <span class="st">"g6(F()) = F()"</span>;</span>
-<span id="cb11-18"><a href="#cb11-18"></a>          <span class="st">"g6(T()) = F()"</span>;</span>
-<span id="cb11-19"><a href="#cb11-19"></a>        ] )</span>
-<span id="cb11-20"><a href="#cb11-20"></a>    (formula</span>
-<span id="cb11-21"><a href="#cb11-21"></a>       [</span>
-<span id="cb11-22"><a href="#cb11-22"></a>         clause [ `Var <span class="st">"x"</span>; `Var <span class="st">"y"</span>; `Var <span class="st">"z"</span> ];</span>
-<span id="cb11-23"><a href="#cb11-23"></a>         clause [ `Var <span class="st">"x"</span>; `Var <span class="st">"y"</span>; `Not <span class="st">"z"</span> ];</span>
-<span id="cb11-24"><a href="#cb11-24"></a>         clause [ `Var <span class="st">"x"</span>; `Not <span class="st">"y"</span>; `Var <span class="st">"z"</span> ];</span>
-<span id="cb11-25"><a href="#cb11-25"></a>         clause [ `Var <span class="st">"x"</span>; `Not <span class="st">"y"</span>; `Not <span class="st">"z"</span> ];</span>
-<span id="cb11-26"><a href="#cb11-26"></a>         clause [ `Not <span class="st">"x"</span>; `Var <span class="st">"y"</span>; `Var <span class="st">"z"</span> ];</span>
-<span id="cb11-27"><a href="#cb11-27"></a>         clause [ `Not <span class="st">"x"</span>; `Var <span class="st">"y"</span>; `Not <span class="st">"z"</span> ];</span>
-<span id="cb11-28"><a href="#cb11-28"></a>         clause [ `Not <span class="st">"x"</span>; `Not <span class="st">"y"</span>; `Var <span class="st">"z"</span> ];</span>
-<span id="cb11-29"><a href="#cb11-29"></a>         clause [ `Not <span class="st">"x"</span>; `Not <span class="st">"y"</span>; `Not <span class="st">"z"</span> ];</span>
-<span id="cb11-30"><a href="#cb11-30"></a>       ])</span></code></pre></div><p>Ditto.</p><a class="header-link" href="#final-words"><h2 id="final-words">Final words</h2></a><p>In this essay, I have demonstrated how supercompilation can solve any
+z) AND (NOT x OR NOT y OR z) AND (NOT x OR NOT y OR NOT z)”:</p><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource ocaml numberLines"><code class="sourceCode ocaml"><span id="cb11-1"><a href="#cb11-1" aria-label="1"></a>  check</span>
+<span id="cb11-2"><a href="#cb11-2" aria-label="2"></a>    ~expected:</span>
+<span id="cb11-3"><a href="#cb11-3" aria-label="3"></a>      ( <span class="st">"g0(x, y, z)"</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-label="4"></a>        [</span>
+<span id="cb11-5"><a href="#cb11-5" aria-label="5"></a>          <span class="st">"g0(F(), y, z) = g1(y, z)"</span>;</span>
+<span id="cb11-6"><a href="#cb11-6" aria-label="6"></a>          <span class="st">"g0(T(), y, z) = g4(y, z)"</span>;</span>
+<span id="cb11-7"><a href="#cb11-7" aria-label="7"></a>          <span class="st">"g1(F(), z) = g2(z)"</span>;</span>
+<span id="cb11-8"><a href="#cb11-8" aria-label="8"></a>          <span class="st">"g1(T(), z) = g3(z)"</span>;</span>
+<span id="cb11-9"><a href="#cb11-9" aria-label="9"></a>          <span class="st">"g2(F()) = F()"</span>;</span>
+<span id="cb11-10"><a href="#cb11-10" aria-label="10"></a>          <span class="st">"g2(T()) = F()"</span>;</span>
+<span id="cb11-11"><a href="#cb11-11" aria-label="11"></a>          <span class="st">"g3(F()) = F()"</span>;</span>
+<span id="cb11-12"><a href="#cb11-12" aria-label="12"></a>          <span class="st">"g3(T()) = F()"</span>;</span>
+<span id="cb11-13"><a href="#cb11-13" aria-label="13"></a>          <span class="st">"g4(F(), z) = g5(z)"</span>;</span>
+<span id="cb11-14"><a href="#cb11-14" aria-label="14"></a>          <span class="st">"g4(T(), z) = g6(z)"</span>;</span>
+<span id="cb11-15"><a href="#cb11-15" aria-label="15"></a>          <span class="st">"g5(F()) = F()"</span>;</span>
+<span id="cb11-16"><a href="#cb11-16" aria-label="16"></a>          <span class="st">"g5(T()) = F()"</span>;</span>
+<span id="cb11-17"><a href="#cb11-17" aria-label="17"></a>          <span class="st">"g6(F()) = F()"</span>;</span>
+<span id="cb11-18"><a href="#cb11-18" aria-label="18"></a>          <span class="st">"g6(T()) = F()"</span>;</span>
+<span id="cb11-19"><a href="#cb11-19" aria-label="19"></a>        ] )</span>
+<span id="cb11-20"><a href="#cb11-20" aria-label="20"></a>    (formula</span>
+<span id="cb11-21"><a href="#cb11-21" aria-label="21"></a>       [</span>
+<span id="cb11-22"><a href="#cb11-22" aria-label="22"></a>         clause [ `Var <span class="st">"x"</span>; `Var <span class="st">"y"</span>; `Var <span class="st">"z"</span> ];</span>
+<span id="cb11-23"><a href="#cb11-23" aria-label="23"></a>         clause [ `Var <span class="st">"x"</span>; `Var <span class="st">"y"</span>; `Not <span class="st">"z"</span> ];</span>
+<span id="cb11-24"><a href="#cb11-24" aria-label="24"></a>         clause [ `Var <span class="st">"x"</span>; `Not <span class="st">"y"</span>; `Var <span class="st">"z"</span> ];</span>
+<span id="cb11-25"><a href="#cb11-25" aria-label="25"></a>         clause [ `Var <span class="st">"x"</span>; `Not <span class="st">"y"</span>; `Not <span class="st">"z"</span> ];</span>
+<span id="cb11-26"><a href="#cb11-26" aria-label="26"></a>         clause [ `Not <span class="st">"x"</span>; `Var <span class="st">"y"</span>; `Var <span class="st">"z"</span> ];</span>
+<span id="cb11-27"><a href="#cb11-27" aria-label="27"></a>         clause [ `Not <span class="st">"x"</span>; `Var <span class="st">"y"</span>; `Not <span class="st">"z"</span> ];</span>
+<span id="cb11-28"><a href="#cb11-28" aria-label="28"></a>         clause [ `Not <span class="st">"x"</span>; `Not <span class="st">"y"</span>; `Var <span class="st">"z"</span> ];</span>
+<span id="cb11-29"><a href="#cb11-29" aria-label="29"></a>         clause [ `Not <span class="st">"x"</span>; `Not <span class="st">"y"</span>; `Not <span class="st">"z"</span> ];</span>
+<span id="cb11-30"><a href="#cb11-30" aria-label="30"></a>       ])</span></code></pre></div><p>Ditto.</p><a class="header-link" href="#final-words"><h2 id="final-words">Final words</h2></a><p>In this essay, I have demonstrated how supercompilation can solve any
 SAT problem with only 10 lines of code in SLL.</p><p>There are several theoretical and practical consequences of this
 discovery:</p><ul>
 <li><strong>Theoretically,</strong> this means that a positive
@@ -1023,79 +1036,76 @@ good stress test for a practical supercompiler.</li>
 </ul></li>
 </ul><p>Although the idea of supercompilation dates back to the 1970’s,
 developing an industrial supercompiler is still an open problem.</p><p>If you find the post interesting, please share your thoughts in the
-comments.</p><a class="header-link" href="#references"><h2 id="references">References</h2></a><section class="footnotes footnotes-end-of-document" role="doc-endnotes">
+comments.</p><a class="header-link" href="#references"><h2 id="references">References</h2></a><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr>
 <ol>
-<li id="fn1" role="doc-endnote"><p>Valentin F. Turchin. 1986. The
-concept of a supercompiler. ACM Trans. Program. Lang. Syst. 8, 3 (July
-1986), 292–325. https://doi.org/10.1145/5956.5957<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2" role="doc-endnote"><p>This encoding is known as <a href="https://en.wikipedia.org/wiki/Peano_axioms">Peano
+<li id="fn1"><p>Valentin F. Turchin. 1986. The concept of a
+supercompiler. ACM Trans. Program. Lang. Syst. 8, 3 (July 1986),
+292–325. https://doi.org/10.1145/5956.5957<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>This encoding is known as <a href="https://en.wikipedia.org/wiki/Peano_axioms">Peano
 arithmetic</a>.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn3" role="doc-endnote"><p>Klimov, Andrei &amp; Romanenko,
-Sergei. (2018). Supercompilation: main principles and basic concepts.
-Keldysh Institute Preprints. 1-36. 10.20948/prepr-2018-111.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn4" role="doc-endnote"><p>In the following example,
-<code>2</code> stands for <code>S(S(Z))</code> in Peano arithmetic.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn5" role="doc-endnote"><p>Futamura, Y. (1983). Partial
-computation of programs. In: Goto, E., Furukawa, K., Nakajima, R.,
-Nakata, I., Yonezawa, A. (eds) RIMS Symposia on Software Science and
-Engineering. Lecture Notes in Computer Science, vol 147. Springer,
-Berlin, Heidelberg. https://doi.org/10.1007/3-540-11980-9_13<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn6" role="doc-endnote"><p>Klimov, Andrei &amp; Romanenko,
-Sergei. (2018). Supercompilation: main principles and basic concepts.
-Keldysh Institute Preprints. 1-36. 10.20948/prepr-2018-111.<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn7" role="doc-endnote"><p>Klimov, Andrei &amp; Romanenko,
-Sergei. (2018). Supercompilation: main principles and basic concepts.
-Keldysh Institute Preprints. 1-36. 10.20948/prepr-2018-111.<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn8" role="doc-endnote"><p>Neil Mitchell. 2010. Rethinking
-supercompilation. SIGPLAN Not. 45, 9 (September 2010), 309–320.
+<li id="fn3"><p>Klimov, Andrei &amp; Romanenko, Sergei. (2018).
+Supercompilation: main principles and basic concepts. Keldysh Institute
+Preprints. 1-36. 10.20948/prepr-2018-111.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>In the following example, <code>2</code> stands for
+<code>S(S(Z))</code> in Peano arithmetic.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>Futamura, Y. (1983). Partial computation of programs.
+In: Goto, E., Furukawa, K., Nakajima, R., Nakata, I., Yonezawa, A. (eds)
+RIMS Symposia on Software Science and Engineering. Lecture Notes in
+Computer Science, vol 147. Springer, Berlin, Heidelberg.
+https://doi.org/10.1007/3-540-11980-9_13<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p>Klimov, Andrei &amp; Romanenko, Sergei. (2018).
+Supercompilation: main principles and basic concepts. Keldysh Institute
+Preprints. 1-36. 10.20948/prepr-2018-111.<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p>Klimov, Andrei &amp; Romanenko, Sergei. (2018).
+Supercompilation: main principles and basic concepts. Keldysh Institute
+Preprints. 1-36. 10.20948/prepr-2018-111.<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p>Neil Mitchell. 2010. Rethinking supercompilation.
+SIGPLAN Not. 45, 9 (September 2010), 309–320.
 https://doi.org/10.1145/1932681.1863588<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn9" role="doc-endnote"><p>Valentin F. Turchin. 1986. The
-concept of a supercompiler. ACM Trans. Program. Lang. Syst. 8, 3 (July
-1986), 292–325. https://doi.org/10.1145/5956.5957<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn10" role="doc-endnote"><p>Romanenko, Sergei. (2018).
-Supercompilation: homeomorphic embedding, call-by-name, partial
-evaluation. Keldysh Institute Preprints. 1-32.
-10.20948/prepr-2018-209.<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn11" role="doc-endnote"><p>Robert Glück and Morten Heine
-Sørensen. 1996. A Roadmap to Metacomputation by Supercompilation. In
-Selected Papers from the International Seminar on Partial Evaluation.
-Springer-Verlag, Berlin, Heidelberg, 137–160.<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn12" role="doc-endnote"><p>Sørensen, M.H.B. (1998). Convergence
-of program transformers in the metric space of trees. In: Jeuring, J.
-(eds) Mathematics of Program Construction. MPC 1998. Lecture Notes in
-Computer Science, vol 1422. Springer, Berlin, Heidelberg.
+<li id="fn9"><p>Valentin F. Turchin. 1986. The concept of a
+supercompiler. ACM Trans. Program. Lang. Syst. 8, 3 (July 1986),
+292–325. https://doi.org/10.1145/5956.5957<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p>Romanenko, Sergei. (2018). Supercompilation:
+homeomorphic embedding, call-by-name, partial evaluation. Keldysh
+Institute Preprints. 1-32. 10.20948/prepr-2018-209.<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p>Robert Glück and Morten Heine Sørensen. 1996. A Roadmap
+to Metacomputation by Supercompilation. In Selected Papers from the
+International Seminar on Partial Evaluation. Springer-Verlag, Berlin,
+Heidelberg, 137–160.<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p>Sørensen, M.H.B. (1998). Convergence of program
+transformers in the metric space of trees. In: Jeuring, J. (eds)
+Mathematics of Program Construction. MPC 1998. Lecture Notes in Computer
+Science, vol 1422. Springer, Berlin, Heidelberg.
 https://doi.org/10.1007/BFb0054297<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn13" role="doc-endnote"><p>Nemytykh, A.P., Pinchuk, V.A.,
-Turchin, V.F. (1996). A Self-Applicable supercompiler. In: Danvy, O.,
-Glück, R., Thiemann, P. (eds) Partial Evaluation. Lecture Notes in
-Computer Science, vol 1110. Springer, Berlin, Heidelberg.
-https://doi.org/10.1007/3-540-61580-6_16<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn14" role="doc-endnote"><p>Glück, R. (1996). On the mechanics
-of metasystem hierarchies in program transformation. In: Proietti, M.
-(eds) Logic Program Synthesis and Transformation. LOPSTR 1995. Lecture
-Notes in Computer Science, vol 1048. Springer, Berlin, Heidelberg.
+<li id="fn13"><p>Nemytykh, A.P., Pinchuk, V.A., Turchin, V.F. (1996). A
+Self-Applicable supercompiler. In: Danvy, O., Glück, R., Thiemann, P.
+(eds) Partial Evaluation. Lecture Notes in Computer Science, vol 1110.
+Springer, Berlin, Heidelberg. https://doi.org/10.1007/3-540-61580-6_16<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p>Glück, R. (1996). On the mechanics of metasystem
+hierarchies in program transformation. In: Proietti, M. (eds) Logic
+Program Synthesis and Transformation. LOPSTR 1995. Lecture Notes in
+Computer Science, vol 1048. Springer, Berlin, Heidelberg.
 https://doi.org/10.1007/3-540-60939-3_18<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn15" role="doc-endnote"><p>Glück, R., Klimov, A.V. (1993).
-Occam’s razor in metacomputation: the notion of a perfect process tree.
-In: Cousot, P., Falaschi, M., Filé, G., Rauzy, A. (eds) Static Analysis.
-WSA 1993. Lecture Notes in Computer Science, vol 724. Springer, Berlin,
+<li id="fn15"><p>Glück, R., Klimov, A.V. (1993). Occam’s razor in
+metacomputation: the notion of a perfect process tree. In: Cousot, P.,
+Falaschi, M., Filé, G., Rauzy, A. (eds) Static Analysis. WSA 1993.
+Lecture Notes in Computer Science, vol 724. Springer, Berlin,
 Heidelberg. https://doi.org/10.1007/3-540-57264-3_34<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn16" role="doc-endnote"><p>Note that this encoding results in
-exponential blowup in code size because the first rule propagates
-<code>...</code> to both branches.<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn17" role="doc-endnote"><p>This is not actually a process tree
-because <code>x</code> must be the first argument in a syntactically
-correct SLL expression. So in reality, the process tree would have three
-branches: one for <code>x</code>, the other two for <code>x=T</code> and
+<li id="fn16"><p>Note that this encoding results in exponential blowup
+in code size because the first rule propagates <code>...</code> to both
+branches.<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p>This is not actually a process tree because
+<code>x</code> must be the first argument in a syntactically correct SLL
+expression. So in reality, the process tree would have three branches:
+one for <code>x</code>, the other two for <code>x=T</code> and
 <code>x=F</code>.<a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn18" role="doc-endnote"><p>Of course, a residual task is not
-“officially” an answer to a decision problem (yes/no), but the answer
-can be mechanically extracted from it.<a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn19" role="doc-endnote"><p>Jonsson, P. A. (2011). Time- and
-size-efficient supercompilation (PhD dissertation, Luleå tekniska
-universitet). Retrieved from
-https://urn.kb.se/resolve?urn=urn:nbn:se:ltu:diva-26651<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p>Of course, a residual task is not “officially” an
+answer to a decision problem (yes/no), but the answer can be
+mechanically extracted from it.<a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p>Jonsson, P. A. (2011). Time- and size-efficient
+supercompilation (PhD dissertation, Luleå tekniska universitet).
+Retrieved from https://urn.kb.se/resolve?urn=urn:nbn:se:ltu:diva-26651<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section><script src="https://giscus.app/client.js" data-repo="hirrolot/hirrolot.github.io" data-repo-id="MDEwOlJlcG9zaXRvcnkzMTQ4MzI2NDA=" data-category="Announcements" data-category-id="DIC_kwDOEsP3AM4CSEqw" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="https://hirrolot.github.io/giscus-theme.css" data-lang="en" data-loading="lazy" crossorigin="anonymous" async="">
 </script></div></body></html>

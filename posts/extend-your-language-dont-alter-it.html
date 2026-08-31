@@ -1,16 +1,32 @@
-<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang=""><head>
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head>
   <meta charset="utf-8">
-  <meta name="generator" content="pandoc">
+  <meta name="generator" content="pandoc 3.11">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <meta name="author" content="hirrolot">
   <title>Extend Your Language, Don't Alter It</title>
   <style>
-    code{white-space: pre-wrap;}
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    ul.task-list{list-style: none;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -49,7 +65,7 @@
     code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
     code span.at { color: #7d9029; } /* Attribute */
     code span.bn { color: #40a070; } /* BaseN */
-    code span.bu { } /* BuiltIn */
+    code span.bu { color: #008000; } /* BuiltIn */
     code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
     code span.ch { color: #4070a0; } /* Char */
     code span.cn { color: #880000; } /* Constant */
@@ -62,7 +78,7 @@
     code span.ex { } /* Extension */
     code span.fl { color: #40a070; } /* Float */
     code span.fu { color: #06287e; } /* Function */
-    code span.im { } /* Import */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
     code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
     code span.kw { color: #007020; font-weight: bold; } /* Keyword */
     code span.op { color: #666666; } /* Operator */
@@ -74,11 +90,12 @@
     code span.va { color: #19177c; } /* Variable */
     code span.vs { color: #4070a0; } /* VerbatimString */
     code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    /* CSS for citations */
     div.csl-bib-body { }
     div.csl-entry {
       clear: both;
     }
-    .hanging div.csl-entry {
+    .hanging-indent div.csl-entry {
       margin-left:2em;
       text-indent:-2em;
     }
@@ -92,8 +109,7 @@
     }
     div.csl-indent {
       margin-left: 2em;
-    }
-  </style>
+    }  </style>
   <link rel="stylesheet" href="../style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -107,9 +123,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&amp;display=swap" rel="stylesheet">
   <link rel="shortcut icon" href="../myself.png" type="image/x-icon">
   <script src="../script.js"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <header id="title-block-header">
@@ -155,16 +168,16 @@ Rust, and Common Lisp <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-
 <em>extend</em> the language, not to <em>alter</em> it.</p>
 </div><nav id="TOC" role="doc-toc" style="display: block;"><h4 class="toc-title">Table of Contents</h4>
 <ul>
-<li><a href="#establishing-the-terminology">Establishing the
+<li><a href="#establishing-the-terminology" id="toc-establishing-the-terminology">Establishing the
 terminology</a></li>
-<li><a href="#syntactical-consistency">Syntactical consistency</a></li>
-<li><a href="#the-bliss-of-rust-syntax-aware-macros">The bliss of Rust:
+<li><a href="#syntactical-consistency" id="toc-syntactical-consistency">Syntactical consistency</a></li>
+<li><a href="#the-bliss-of-rust-syntax-aware-macros" id="toc-the-bliss-of-rust-syntax-aware-macros">The bliss of Rust:
 Syntax-aware macros</a></li>
-<li><a href="#the-bliss-of-lisp-why-s-expressions-are-so-hot">The bliss
-of Lisp: Why S-expressions are so hot</a></li>
-<li><a href="#extending-good-old-c">Extending good old C</a></li>
-<li><a href="#final-words">Final words</a></li>
-<li><a href="#references">References</a></li>
+<li><a href="#the-bliss-of-lisp-why-s-expressions-are-so-hot" id="toc-the-bliss-of-lisp-why-s-expressions-are-so-hot">The bliss of
+Lisp: Why S-expressions are so hot</a></li>
+<li><a href="#extending-good-old-c" id="toc-extending-good-old-c">Extending good old C</a></li>
+<li><a href="#final-words" id="toc-final-words">Final words</a></li>
+<li><a href="#references" id="toc-references">References</a></li>
 </ul>
 </nav>
 
@@ -261,40 +274,40 @@ preprocessor, in Rust you can simply use generics instead of
 instantiating type-specific code by hand. Or you can <a href="https://github.com/lloydmeta/frunk">go insane</a> and play with
 type lists instead of (ab)using compile-time macro collections of <a href="https://github.com/boostorg/preprocessor">Boost/Preprocessor</a>.
 So types are capable of metaprogramming to some extent <span class="citation" data-cites="typeclass-metaprogramming hoas gadt-for-dummies type-level-rust-1 type-level-rust-2 rust-type-system-turing-complete type-operators-rust typenum fortraith idris-book">(Alexis
-King, n.d.; Wikipedia, n.d.b; Haskell Wiki, n.d.; Will Crichton, n.d.b,
-n.d.a; Shea Leffler, n.d.b, n.d.a; Paho Lurie-Gregg and Andre Bogus,
-n.d.; Szymon Mikulicz, n.d.; Edwin Brady, n.d.)</span> – this is why
-they are “meta”.</p><p>The presence of either of these tools in our language makes us able
+King, n.d.; Wikipedia, n.d.-b; Haskell Wiki, n.d.; Will Crichton,
+n.d.-b, n.d.-a; Shea Leffler, n.d.-b, n.d.-a; Paho Lurie-Gregg and Andre
+Bogus, n.d.; Szymon Mikulicz, n.d.; Edwin Brady, n.d.)</span> – this is
+why they are “meta”.</p><p>The presence of either of these tools in our language makes us able
 to extend it with custom concepts in an embedded manner, i.e., without
 intervention of third-party utilities. However, today I will discuss
 only the syntax business – macros.</p><p>Having the terminology established, let us dive into the
-pragmatics!</p><a class="header-link" href="#syntactical-consistency"><h2 id="syntactical-consistency">Syntactical consistency</h2></a><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource c numberLines"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1"></a>datatype<span class="op">(</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a>    BinaryTree<span class="op">,</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a>    <span class="op">(</span>Leaf<span class="op">,</span> <span class="dt">int</span><span class="op">),</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a>    <span class="op">(</span>Node<span class="op">,</span> BinaryTree <span class="op">*,</span> <span class="dt">int</span><span class="op">,</span> BinaryTree <span class="op">*)</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="op">);</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="dt">int</span> sum<span class="op">(</span><span class="dt">const</span> BinaryTree <span class="op">*</span>tree<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a>    match<span class="op">(*</span>tree<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-9"><a href="#cb1-9"></a>        of<span class="op">(</span>Leaf<span class="op">,</span> x<span class="op">)</span> <span class="cf">return</span> <span class="op">*</span>x<span class="op">;</span></span>
-<span id="cb1-10"><a href="#cb1-10"></a>        of<span class="op">(</span>Node<span class="op">,</span> lhs<span class="op">,</span> x<span class="op">,</span> rhs<span class="op">)</span> <span class="cf">return</span> sum<span class="op">(*</span>lhs<span class="op">)</span> <span class="op">+</span> <span class="op">*</span>x <span class="op">+</span> sum<span class="op">(*</span>rhs<span class="op">);</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a>    <span class="op">}</span></span>
-<span id="cb1-12"><a href="#cb1-12"></a></span>
-<span id="cb1-13"><a href="#cb1-13"></a>    <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
-<span id="cb1-14"><a href="#cb1-14"></a><span class="op">}</span></span></code></pre></div><p>What is this? This is how good old C looks like with <a href="https://github.com/hirrolot/datatype99">Datatype99</a>, a library
+pragmatics!</p><a class="header-link" href="#syntactical-consistency"><h2 id="syntactical-consistency">Syntactical consistency</h2></a><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource c numberLines"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-label="1"></a>datatype<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-label="2"></a>    BinaryTree<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-label="3"></a>    <span class="op">(</span>Leaf<span class="op">,</span> <span class="dt">int</span><span class="op">),</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-label="4"></a>    <span class="op">(</span>Node<span class="op">,</span> BinaryTree <span class="op">*,</span> <span class="dt">int</span><span class="op">,</span> BinaryTree <span class="op">*)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-label="5"></a><span class="op">);</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-label="6"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-label="7"></a><span class="dt">int</span> sum<span class="op">(</span><span class="dt">const</span> BinaryTree <span class="op">*</span>tree<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-label="8"></a>    match<span class="op">(*</span>tree<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-label="9"></a>        of<span class="op">(</span>Leaf<span class="op">,</span> x<span class="op">)</span> <span class="cf">return</span> <span class="op">*</span>x<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-label="10"></a>        of<span class="op">(</span>Node<span class="op">,</span> lhs<span class="op">,</span> x<span class="op">,</span> rhs<span class="op">)</span> <span class="cf">return</span> sum<span class="op">(*</span>lhs<span class="op">)</span> <span class="op">+</span> <span class="op">*</span>x <span class="op">+</span> sum<span class="op">(*</span>rhs<span class="op">);</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-label="11"></a>    <span class="op">}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-label="12"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-label="13"></a>    <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-label="14"></a><span class="op">}</span></span></code></pre></div><p>What is this? This is how good old C looks like with <a href="https://github.com/hirrolot/datatype99">Datatype99</a>, a library
 that provides us with the full support for <a href="https://en.wikipedia.org/wiki/Algebraic_data_type">algebraic data
 types</a>. Please pay your attention to the pattern matching syntax.
 Does it feel alright? Does it feel natural, like it has always been
-there? Absolutely. Now gaze upon this imaginary piece of code:</p><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource c numberLines"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1"></a><span class="dt">int</span> sum<span class="op">(</span><span class="dt">const</span> BinaryTree <span class="op">*</span>tree<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a>    match<span class="op">(</span></span>
-<span id="cb2-3"><a href="#cb2-3"></a>        <span class="op">*</span>tree<span class="op">,</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a>        <span class="op">{</span></span>
-<span id="cb2-5"><a href="#cb2-5"></a>            of<span class="op">(</span>Leaf<span class="op">,</span> <span class="op">(</span>x<span class="op">),</span> <span class="cf">return</span> <span class="op">*</span>x<span class="op">),</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a>            of<span class="op">(</span>Node<span class="op">,</span> <span class="op">(</span>lhs<span class="op">,</span> x<span class="op">,</span> rhs<span class="op">),</span> <span class="cf">return</span> sum<span class="op">(*</span>lhs<span class="op">)</span> <span class="op">+</span> <span class="op">*</span>x <span class="op">+</span> sum<span class="op">(*</span>rhs<span class="op">)),</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a>        <span class="op">});</span></span>
-<span id="cb2-8"><a href="#cb2-8"></a></span>
-<span id="cb2-9"><a href="#cb2-9"></a>    <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="op">}</span></span></code></pre></div><p>I ask you the same question: does it feel alright? Does it feel
+there? Absolutely. Now gaze upon this imaginary piece of code:</p><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource c numberLines"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-label="1"></a><span class="dt">int</span> sum<span class="op">(</span><span class="dt">const</span> BinaryTree <span class="op">*</span>tree<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-label="2"></a>    match<span class="op">(</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-label="3"></a>        <span class="op">*</span>tree<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-label="4"></a>        <span class="op">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-label="5"></a>            of<span class="op">(</span>Leaf<span class="op">,</span> <span class="op">(</span>x<span class="op">),</span> <span class="cf">return</span> <span class="op">*</span>x<span class="op">),</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-label="6"></a>            of<span class="op">(</span>Node<span class="op">,</span> <span class="op">(</span>lhs<span class="op">,</span> x<span class="op">,</span> rhs<span class="op">),</span> <span class="cf">return</span> sum<span class="op">(*</span>lhs<span class="op">)</span> <span class="op">+</span> <span class="op">*</span>x <span class="op">+</span> sum<span class="op">(*</span>rhs<span class="op">)),</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-label="7"></a>        <span class="op">});</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-label="8"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-label="9"></a>    <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-label="10"></a><span class="op">}</span></span></code></pre></div><p>I ask you the same question: does it feel alright? Does it feel
 natural, like it has always been there? Absolutely <strong>NOT</strong>.
 While it might look fine in another language, it looks utterly weird in
 C. But actually, what is the essential difference between these two code
@@ -317,40 +330,40 @@ often see constructions of the form
 <li>etc.</li>
 </ul><p>Got the pattern? The proper syntax of <code>match</code>
 <em>coincides</em> with the syntax of the host language, C in our case,
-whereas the latter one does not. Another example:</p><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource c numberLines"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1"></a><span class="pp">#define State_INTERFACE               \</span></span>
-<span id="cb3-2"><a href="#cb3-2"></a><span class="pp">    iFn(int, get, void *self);        \</span></span>
-<span id="cb3-3"><a href="#cb3-3"></a><span class="pp">    iFn(void, set, void *self, int x);</span></span>
-<span id="cb3-4"><a href="#cb3-4"></a></span>
-<span id="cb3-5"><a href="#cb3-5"></a>interface<span class="op">(</span>State<span class="op">);</span></span>
-<span id="cb3-6"><a href="#cb3-6"></a></span>
-<span id="cb3-7"><a href="#cb3-7"></a><span class="kw">typedef</span> <span class="kw">struct</span> <span class="op">{</span></span>
-<span id="cb3-8"><a href="#cb3-8"></a>    <span class="dt">int</span> x<span class="op">;</span></span>
-<span id="cb3-9"><a href="#cb3-9"></a><span class="op">}</span> Num<span class="op">;</span></span>
-<span id="cb3-10"><a href="#cb3-10"></a></span>
-<span id="cb3-11"><a href="#cb3-11"></a><span class="dt">int</span> Num_State_get<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>self<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-12"><a href="#cb3-12"></a>    <span class="cf">return</span> <span class="op">((</span>Num <span class="op">*)</span>self<span class="op">)-&gt;</span>x<span class="op">;</span></span>
-<span id="cb3-13"><a href="#cb3-13"></a><span class="op">}</span></span>
-<span id="cb3-14"><a href="#cb3-14"></a></span>
-<span id="cb3-15"><a href="#cb3-15"></a><span class="dt">void</span> Num_State_set<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>self<span class="op">,</span> <span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-16"><a href="#cb3-16"></a>    <span class="op">((</span>Num <span class="op">*)</span>self<span class="op">)-&gt;</span>x <span class="op">=</span> x<span class="op">;</span></span>
-<span id="cb3-17"><a href="#cb3-17"></a><span class="op">}</span></span>
-<span id="cb3-18"><a href="#cb3-18"></a></span>
-<span id="cb3-19"><a href="#cb3-19"></a>impl<span class="op">(</span>State<span class="op">,</span> Num<span class="op">);</span></span></code></pre></div><p>This time you see pure ISO C99 augmented with <a href="https://github.com/hirrolot/interface99">Interface99</a>, a
+whereas the latter one does not. Another example:</p><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource c numberLines"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-label="1"></a><span class="pp">#define State_INTERFACE               </span><span class="op">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-label="2"></a><span class="pp">    iFn</span><span class="op">(</span><span class="dt">int</span><span class="op">,</span><span class="pp"> get</span><span class="op">,</span><span class="pp"> </span><span class="dt">void</span><span class="pp"> </span><span class="op">*</span><span class="pp">self</span><span class="op">);</span><span class="pp">        </span><span class="op">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-label="3"></a><span class="pp">    iFn</span><span class="op">(</span><span class="dt">void</span><span class="op">,</span><span class="pp"> set</span><span class="op">,</span><span class="pp"> </span><span class="dt">void</span><span class="pp"> </span><span class="op">*</span><span class="pp">self</span><span class="op">,</span><span class="pp"> </span><span class="dt">int</span><span class="pp"> x</span><span class="op">);</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-label="4"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-label="5"></a>interface<span class="op">(</span>State<span class="op">);</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-label="6"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-label="7"></a><span class="kw">typedef</span> <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-label="8"></a>    <span class="dt">int</span> x<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-label="9"></a><span class="op">}</span> Num<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-label="10"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-label="11"></a><span class="dt">int</span> Num_State_get<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>self<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-label="12"></a>    <span class="cf">return</span> <span class="op">((</span>Num <span class="op">*)</span>self<span class="op">)-&gt;</span>x<span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-label="13"></a><span class="op">}</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-label="14"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-label="15"></a><span class="dt">void</span> Num_State_set<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>self<span class="op">,</span> <span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-label="16"></a>    <span class="op">((</span>Num <span class="op">*)</span>self<span class="op">)-&gt;</span>x <span class="op">=</span> x<span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-label="17"></a><span class="op">}</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-label="18"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-label="19"></a>impl<span class="op">(</span>State<span class="op">,</span> Num<span class="op">);</span></span></code></pre></div><p>This time you see pure ISO C99 augmented with <a href="https://github.com/hirrolot/interface99">Interface99</a>, a
 library that provides the software interface pattern. Notice that the
 function definition syntax remains the same (albeit <code>iFn</code> is
 somewhat less common), and <code>impl</code> just deduces these
 definitions (<code>Num_State_get</code> &amp;
-<code>Num_State_set</code>) from the context. Now consider this:</p><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource c numberLines"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1"></a>impl<span class="op">(</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a>    <span class="op">(</span>State<span class="op">)</span> <span class="cf">for</span> <span class="op">(</span>Num<span class="op">),</span></span>
-<span id="cb4-3"><a href="#cb4-3"></a></span>
-<span id="cb4-4"><a href="#cb4-4"></a>    <span class="op">(</span><span class="dt">int</span><span class="op">)(</span>get<span class="op">)(</span><span class="dt">void</span> <span class="op">*</span>self<span class="op">)({</span></span>
-<span id="cb4-5"><a href="#cb4-5"></a>        <span class="cf">return</span> <span class="op">((</span>Num <span class="op">*)</span>self<span class="op">)-&gt;</span>x<span class="op">;</span></span>
-<span id="cb4-6"><a href="#cb4-6"></a>    <span class="op">}),</span></span>
-<span id="cb4-7"><a href="#cb4-7"></a></span>
-<span id="cb4-8"><a href="#cb4-8"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)(</span>set<span class="op">)(</span><span class="dt">void</span> <span class="op">*</span>self<span class="op">,</span> <span class="dt">int</span> x<span class="op">)({</span></span>
-<span id="cb4-9"><a href="#cb4-9"></a>        <span class="op">((</span>Num <span class="op">*)</span>self<span class="op">)-&gt;</span>x <span class="op">=</span> x<span class="op">;</span></span>
-<span id="cb4-10"><a href="#cb4-10"></a>    <span class="op">}),</span></span>
-<span id="cb4-11"><a href="#cb4-11"></a><span class="op">);</span></span></code></pre></div><p>This macro <code>impl</code> does not follow the syntax of C. This is
+<code>Num_State_set</code>) from the context. Now consider this:</p><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource c numberLines"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-label="1"></a>impl<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-label="2"></a>    <span class="op">(</span>State<span class="op">)</span> <span class="cf">for</span> <span class="op">(</span>Num<span class="op">),</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-label="3"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-label="4"></a>    <span class="op">(</span><span class="dt">int</span><span class="op">)(</span>get<span class="op">)(</span><span class="dt">void</span> <span class="op">*</span>self<span class="op">)({</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-label="5"></a>        <span class="cf">return</span> <span class="op">((</span>Num <span class="op">*)</span>self<span class="op">)-&gt;</span>x<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-label="6"></a>    <span class="op">}),</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-label="7"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-label="8"></a>    <span class="op">(</span><span class="dt">void</span><span class="op">)(</span>set<span class="op">)(</span><span class="dt">void</span> <span class="op">*</span>self<span class="op">,</span> <span class="dt">int</span> x<span class="op">)({</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-label="9"></a>        <span class="op">((</span>Num <span class="op">*)</span>self<span class="op">)-&gt;</span>x <span class="op">=</span> x<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-label="10"></a>    <span class="op">}),</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-label="11"></a><span class="op">);</span></span></code></pre></div><p>This macro <code>impl</code> does not follow the syntax of C. This is
 why it looks so odd.</p><p>Both alternatives have the same semantics and the same functionality.
 The difference is only in the syntax part. Always try to mimic to the
 syntax of your host language, and you should be fine. Do not try to
@@ -361,18 +374,18 @@ Rusty macros work with <a href="https://en.wikipedia.org/wiki/Parse_tree">concre
 trees</a>, and sometimes with language tokens. This is cool because they
 let you <em>imitate</em> the syntax of Rust: you can parse function
 definitions, structures, enumerations, or pretty much anything! Consider
-<a href="https://docs.rs/tokio/latest/tokio/macro.select.html"><code>tokio::select!</code></a>:</p><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource rust numberLines"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1"></a><span class="pp">tokio::select!</span> <span class="op">{</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a>    v1 <span class="op">=</span> (<span class="op">&amp;</span><span class="kw">mut</span> rx1)<span class="op">,</span> <span class="cf">if</span> a<span class="op">.</span>is_none() <span class="op">=&gt;</span> a <span class="op">=</span> <span class="cn">Some</span>(v1<span class="op">.</span>unwrap())<span class="op">,</span></span>
-<span id="cb5-3"><a href="#cb5-3"></a>    v2 <span class="op">=</span> (<span class="op">&amp;</span><span class="kw">mut</span> rx2)<span class="op">,</span> <span class="cf">if</span> b<span class="op">.</span>is_none() <span class="op">=&gt;</span> b <span class="op">=</span> <span class="cn">Some</span>(v2<span class="op">.</span>unwrap())<span class="op">,</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="op">}</span></span></code></pre></div><p>See? The <code>&lt;something&gt; =&gt; &lt;something&gt;</code>
+<a href="https://docs.rs/tokio/latest/tokio/macro.select.html"><code>tokio::select!</code></a>:</p><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource rust numberLines"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-label="1"></a><span class="pp">tokio::select!</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-label="2"></a>    v1 <span class="op">=</span> (<span class="op">&amp;</span><span class="kw">mut</span> rx1)<span class="op">,</span> <span class="cf">if</span> a<span class="op">.</span>is_none() <span class="op">=&gt;</span> a <span class="op">=</span> <span class="cn">Some</span>(v1<span class="op">.</span>unwrap())<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-label="3"></a>    v2 <span class="op">=</span> (<span class="op">&amp;</span><span class="kw">mut</span> rx2)<span class="op">,</span> <span class="cf">if</span> b<span class="op">.</span>is_none() <span class="op">=&gt;</span> b <span class="op">=</span> <span class="cn">Some</span>(v2<span class="op">.</span>unwrap())<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-label="4"></a><span class="op">}</span></span></code></pre></div><p>See? The <code>&lt;something&gt; =&gt; &lt;something&gt;</code>
 syntax is much like native Rusty pattern matching. Because of it, this
 syntax looks very familiar, and even if you are not yet acquainted with
-the macro, you can already roughly understand what is happening.</p><p>Another example is derive macros of <a href="https://github.com/serde-rs/json">serde-json</a>:</p><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource rust numberLines"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1"></a><span class="at">#[</span>derive<span class="at">(</span>Serialize<span class="op">,</span> Deserialize<span class="at">)]</span></span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">struct</span> Person <span class="op">{</span></span>
-<span id="cb6-3"><a href="#cb6-3"></a>    name<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
-<span id="cb6-4"><a href="#cb6-4"></a>    age<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span></span>
-<span id="cb6-5"><a href="#cb6-5"></a>    phones<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span></span>
-<span id="cb6-6"><a href="#cb6-6"></a><span class="op">}</span></span></code></pre></div><p>Here, <code>Serialize</code> &amp; <code>Deserialize</code> are
+the macro, you can already roughly understand what is happening.</p><p>Another example is derive macros of <a href="https://github.com/serde-rs/json">serde-json</a>:</p><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource rust numberLines"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-label="1"></a><span class="at">#[</span>derive<span class="at">(</span>Serialize<span class="op">,</span> Deserialize<span class="at">)]</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-label="2"></a><span class="kw">struct</span> Person <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-label="3"></a>    name<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-label="4"></a>    age<span class="op">:</span> <span class="dt">u8</span><span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-label="5"></a>    phones<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-label="6"></a><span class="op">}</span></span></code></pre></div><p>Here, <code>Serialize</code> &amp; <code>Deserialize</code> are
 indeed macros. They parse the contents of <code>struct Person</code> and
 derive the corresponding traits for it. You do not need to adjust the
 definition of the structure because the syntax is shared, and this is
@@ -415,31 +428,31 @@ of syntactic forms your host language accomodates.</p><p>To come back to our mut
 facilitate syntactical consistency. Consider this: if there are only
 s-expressions and nothing more, you can imitate <em>any</em> language
 item with simple macros – everything will look the same. Even with
-so-called “powerful” Rusty macros, we cannot do this:</p><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource rust numberLines"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1"></a><span class="pp">delegate!</span>(<span class="kw">self</span><span class="op">.</span>inner) <span class="op">{</span></span>
-<span id="cb7-2"><a href="#cb7-2"></a>    <span class="kw">pub</span> <span class="kw">fn</span> is_empty(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">bool</span><span class="op">;</span></span>
-<span id="cb7-3"><a href="#cb7-3"></a>    <span class="kw">pub</span> <span class="kw">fn</span> push(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> value<span class="op">:</span> T)<span class="op">;</span></span>
-<span id="cb7-4"><a href="#cb7-4"></a>    <span class="kw">pub</span> <span class="kw">fn</span> pop(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
-<span id="cb7-5"><a href="#cb7-5"></a>    <span class="kw">pub</span> <span class="kw">fn</span> clear(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>)<span class="op">;</span></span>
-<span id="cb7-6"><a href="#cb7-6"></a><span class="op">}</span></span></code></pre></div><p>The only way is to write like this:</p><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource rust numberLines"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1"></a><span class="pp">delegate!</span> <span class="op">{</span></span>
-<span id="cb8-2"><a href="#cb8-2"></a>    to <span class="kw">self</span><span class="op">.</span>inner <span class="op">{</span></span>
-<span id="cb8-3"><a href="#cb8-3"></a>        <span class="kw">pub</span> <span class="kw">fn</span> is_empty(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">bool</span><span class="op">;</span></span>
-<span id="cb8-4"><a href="#cb8-4"></a>        <span class="kw">pub</span> <span class="kw">fn</span> push(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> value<span class="op">:</span> T)<span class="op">;</span></span>
-<span id="cb8-5"><a href="#cb8-5"></a>        <span class="kw">pub</span> <span class="kw">fn</span> pop(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
-<span id="cb8-6"><a href="#cb8-6"></a>        <span class="kw">pub</span> <span class="kw">fn</span> clear(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>)<span class="op">;</span></span>
-<span id="cb8-7"><a href="#cb8-7"></a>    <span class="op">}</span></span>
-<span id="cb8-8"><a href="#cb8-8"></a><span class="op">}</span></span></code></pre></div><p class="adapted-from">
+so-called “powerful” Rusty macros, we cannot do this:</p><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource rust numberLines"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-label="1"></a><span class="pp">delegate!</span>(<span class="kw">self</span><span class="op">.</span>inner) <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-label="2"></a>    <span class="kw">pub</span> <span class="kw">fn</span> is_empty(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">bool</span><span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-label="3"></a>    <span class="kw">pub</span> <span class="kw">fn</span> push(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> value<span class="op">:</span> T)<span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-label="4"></a>    <span class="kw">pub</span> <span class="kw">fn</span> pop(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-label="5"></a>    <span class="kw">pub</span> <span class="kw">fn</span> clear(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>)<span class="op">;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-label="6"></a><span class="op">}</span></span></code></pre></div><p>The only way is to write like this:</p><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource rust numberLines"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-label="1"></a><span class="pp">delegate!</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-label="2"></a>    to <span class="kw">self</span><span class="op">.</span>inner <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-label="3"></a>        <span class="kw">pub</span> <span class="kw">fn</span> is_empty(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">bool</span><span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-label="4"></a>        <span class="kw">pub</span> <span class="kw">fn</span> push(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span><span class="op">,</span> value<span class="op">:</span> T)<span class="op">;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-label="5"></a>        <span class="kw">pub</span> <span class="kw">fn</span> pop(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-label="6"></a>        <span class="kw">pub</span> <span class="kw">fn</span> clear(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>)<span class="op">;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-label="7"></a>    <span class="op">}</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-label="8"></a><span class="op">}</span></span></code></pre></div><p class="adapted-from">
 Adapted from <a href="https://github.com/Kobzol/rust-delegate">Kobzol/rust-delegate</a>,
 a library for automatic method delegation in Rust.
 </p><p>Clearly less nifty. The <code>match</code> control flow operator can
-do that, why your “powerful” macros cannot? Look:</p><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource rust numberLines"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="cn">Some</span>(<span class="dv">5</span>)<span class="op">;</span></span>
-<span id="cb9-2"><a href="#cb9-2"></a><span class="kw">let</span> y <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
-<span id="cb9-3"><a href="#cb9-3"></a></span>
-<span id="cb9-4"><a href="#cb9-4"></a><span class="co">// match!(x) { ...} ? Hmm...</span></span>
-<span id="cb9-5"><a href="#cb9-5"></a><span class="cf">match</span> x <span class="op">{</span></span>
-<span id="cb9-6"><a href="#cb9-6"></a>    <span class="cn">Some</span>(<span class="dv">50</span>) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"Got 50"</span>)<span class="op">,</span></span>
-<span id="cb9-7"><a href="#cb9-7"></a>    <span class="cn">Some</span>(y) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"Matched, y = {:?}"</span><span class="op">,</span> y)<span class="op">,</span></span>
-<span id="cb9-8"><a href="#cb9-8"></a>    _ <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"Default case, x = {:?}"</span><span class="op">,</span> x)<span class="op">,</span></span>
-<span id="cb9-9"><a href="#cb9-9"></a><span class="op">}</span></span></code></pre></div><p class="adapted-from">
+do that, why your “powerful” macros cannot? Look:</p><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource rust numberLines"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-label="1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="cn">Some</span>(<span class="dv">5</span>)<span class="op">;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-label="2"></a><span class="kw">let</span> y <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-label="3"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-label="4"></a><span class="co">// match!(x) { ...} ? Hmm...</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-label="5"></a><span class="cf">match</span> x <span class="op">{</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-label="6"></a>    <span class="cn">Some</span>(<span class="dv">50</span>) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"Got 50"</span>)<span class="op">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-label="7"></a>    <span class="cn">Some</span>(y) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"Matched, y = {:?}"</span><span class="op">,</span> y)<span class="op">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-label="8"></a>    _ <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"Default case, x = {:?}"</span><span class="op">,</span> x)<span class="op">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-label="9"></a><span class="op">}</span></span></code></pre></div><p class="adapted-from">
 Adapted from <a href="https://doc.rust-lang.org/book/ch18-03-pattern-syntax.html">the
 chapter of TRPL about pattern matching</a>.
 </p><p>Even if it could be fixed, this example does still greatly
@@ -452,7 +465,7 @@ grammar</a>:</p><blockquote>
 mechanisms within the formalism to allow its own production rules to be
 manipulated.”</p>
 </blockquote><p class="quote-author">
-Wikipedia <span class="citation" data-cites="wikipedia-adaptive-grammar">(Wikipedia, n.d.a)</span>
+Wikipedia <span class="citation" data-cites="wikipedia-adaptive-grammar">(Wikipedia, n.d.-a)</span>
 </p><p>Basically what it means is that you can specify your own syntactic
 forms (like <code>match</code> or <code>if</code>) right inside a source
 file, and a built-in parser will do the trick. <a href="https://www.idris-lang.org/">Idris</a> supports the feature called
@@ -461,9 +474,9 @@ extensions</a>, which is, to the best of my understanding, is pretty
 much like an adaptive grammar; believe or not, the
 <code>if ... then ...  else</code> syntax is not built into the Idris
 compiler, but is rather defined via the <code>ifThenElse</code>
-function:</p><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource idris numberLines"><code class="sourceCode idris"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">ifThenElse</span> <span class="ot">:</span> (x<span class="ot">:</span><span class="dt">Bool</span>) <span class="ot">-&gt;</span> <span class="dt">Lazy</span> a <span class="ot">-&gt;</span> <span class="dt">Lazy</span> a <span class="ot">-&gt;</span> a;</span>
-<span id="cb10-2"><a href="#cb10-2"></a>ifThenElse <span class="dt">True</span>  t e <span class="fu">=</span> t;</span>
-<span id="cb10-3"><a href="#cb10-3"></a>ifThenElse <span class="dt">False</span> t e <span class="fu">=</span> e;</span></code></pre></div><p>Which is invoked by the following syntactic rule:</p><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource idris numberLines"><code class="sourceCode idris"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">syntax</span> <span class="kw">if</span> [test] <span class="kw">then</span> [t] <span class="kw">else</span> [e] <span class="fu">=</span> ifThenElse test t e;</span></code></pre></div><p>Similar syntactical constructions can be defined in the same way. No
+function:</p><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource idris numberLines"><code class="sourceCode idris"><span id="cb10-1"><a href="#cb10-1" aria-label="1"></a><span class="fu">ifThenElse</span> <span class="ot">:</span> (x<span class="ot">:</span><span class="dt">Bool</span>) <span class="ot">-&gt;</span> <span class="dt">Lazy</span> a <span class="ot">-&gt;</span> <span class="dt">Lazy</span> a <span class="ot">-&gt;</span> a;</span>
+<span id="cb10-2"><a href="#cb10-2" aria-label="2"></a>ifThenElse <span class="dt">True</span>  t e <span class="fu">=</span> t;</span>
+<span id="cb10-3"><a href="#cb10-3" aria-label="3"></a>ifThenElse <span class="dt">False</span> t e <span class="fu">=</span> e;</span></code></pre></div><p>Which is invoked by the following syntactic rule:</p><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource idris numberLines"><code class="sourceCode idris"><span id="cb11-1"><a href="#cb11-1" aria-label="1"></a><span class="kw">syntax</span> <span class="kw">if</span> [test] <span class="kw">then</span> [t] <span class="kw">else</span> [e] <span class="fu">=</span> ifThenElse test t e;</span></code></pre></div><p>Similar syntactical constructions can be defined in the same way. No
 need to wait for a couple of years till language designers decide to
 ship a new release, do it right here and right now. Yes, you will be
 right if you say that Rust is extensible, but the thing is that its
@@ -473,116 +486,115 @@ details and techniques.</p><p>I suggest you to start with a <a href="https://www
 article</a> of Simon Tatham about metaprogramming custom control
 structures in C <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>. If you are only interested in a
 working solution, consider <a href="https://github.com/hirrolot/metalang99">Metalang99</a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> with its <a href="https://metalang99.readthedocs.io/en/latest/stmt.html">statement
-chaining macros</a>. Seeing how pattern matching works in <a href="https://github.com/hirrolot/datatype99">Datatype99</a> <span class="citation" data-cites="compiling-adt-c">(hirrolot, n.d.)</span>
-can also give you some insight.</p><a class="header-link" href="#final-words"><h2 id="final-words">Final words</h2></a><p>Some languages are more malleable to user extension than the others.
+chaining macros</a>. Seeing how pattern matching works in <a href="https://github.com/hirrolot/datatype99">Datatype99</a> <span class="citation" data-cites="compiling-adt-c">(<span class="nocase">hirrolot</span>, n.d.)</span> can also give you some
+insight.</p><a class="header-link" href="#final-words"><h2 id="final-words">Final words</h2></a><p>Some languages are more malleable to user extension than the others.
 Some employ adaptive grammars (<a href="https://www.idris-lang.org/">Idris</a>), some employ syntax-aware
 macros (Rust), some employ Lisp-style s-expressions. Surely, there are a
 lot of alternatives in the design space, each has its own benefits and
 downsides.</p><p>The intent of this blog post was to advocate the principle of
 syntactical consistency.</p><p>I encourage you to mimic the syntax of a host language when writing
 macros, to make your code look more eye-pleasing, less like a malevolent
-beast.</p><p>I encourage you to <strong>extend, not to alter</strong>.</p><a class="header-link" href="#references"><h2 class="unnumbered" id="references">References</h2></a><div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
-<div id="ref-typeclass-metaprogramming" class="csl-entry" role="doc-biblioentry">
-Alexis King. n.d. <span>“An Introduction to Typeclass
-Metaprogramming.”</span> <a href="https://lexi-lambda.github.io/blog/2021/03/25/an-introduction-to-typeclass-metaprogramming/">https://lexi-lambda.github.io/blog/2021/03/25/an-introduction-to-typeclass-metaprogramming/</a>.
+beast.</p><p>I encourage you to <strong>extend, not to alter</strong>.</p><a class="header-link" href="#references"><h2 class="unnumbered" id="references">References</h2></a><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-typeclass-metaprogramming" class="csl-entry" role="listitem">
+Alexis King. n.d. <em>An Introduction to Typeclass Metaprogramming</em>.
+<a href="https://lexi-lambda.github.io/blog/2021/03/25/an-introduction-to-typeclass-metaprogramming/">https://lexi-lambda.github.io/blog/2021/03/25/an-introduction-to-typeclass-metaprogramming/</a>.
 </div>
-<div id="ref-dtolnay-reflect" class="csl-entry" role="doc-biblioentry">
-David Tolnay. n.d. <span>“Compile-Time Reflection API for Developing
-Robust Procedural Macros (Proof of Concept).”</span> <a href="https://github.com/dtolnay/reflect">https://github.com/dtolnay/reflect</a>.
+<div id="ref-dtolnay-reflect" class="csl-entry" role="listitem">
+David Tolnay. n.d. <em>Compile-Time Reflection API for Developing Robust
+Procedural Macros (Proof of Concept)</em>. <a href="https://github.com/dtolnay/reflect">https://github.com/dtolnay/reflect</a>.
 </div>
-<div id="ref-idris-book" class="csl-entry" role="doc-biblioentry">
+<div id="ref-idris-book" class="csl-entry" role="listitem">
 Edwin Brady. n.d. <em>Type-Driven Development with Idris</em>. <a href="https://www.manning.com/books/type-driven-development-with-idris">https://www.manning.com/books/type-driven-development-with-idris</a>.
 </div>
-<div id="ref-gadt-for-dummies" class="csl-entry" role="doc-biblioentry">
-Haskell Wiki. n.d. <span>“GADTs for Dummies.”</span> <a href="https://wiki.haskell.org/GADTs_for_dummies">https://wiki.haskell.org/GADTs_for_dummies</a>.
+<div id="ref-gadt-for-dummies" class="csl-entry" role="listitem">
+Haskell Wiki. n.d. <em>GADTs for Dummies</em>. <a href="https://wiki.haskell.org/GADTs_for_dummies">https://wiki.haskell.org/GADTs_for_dummies</a>.
 </div>
-<div id="ref-compiling-adt-c" class="csl-entry" role="doc-biblioentry">
-hirrolot. n.d. <span>“Compiling Algebraic Data Types in Pure
-C99.”</span> <a href="https://hirrolot.github.io/posts/compiling-algebraic-data-types-in-pure-c99.html">https://hirrolot.github.io/posts/compiling-algebraic-data-types-in-pure-c99.html</a>.
+<div id="ref-compiling-adt-c" class="csl-entry" role="listitem">
+<span class="nocase">hirrolot</span>. n.d. <em>Compiling Algebraic Data
+Types in Pure C99</em>. <a href="https://hirrolot.github.io/posts/compiling-algebraic-data-types-in-pure-c99.html">https://hirrolot.github.io/posts/compiling-algebraic-data-types-in-pure-c99.html</a>.
 </div>
-<div id="ref-preprocessing-tokens" class="csl-entry" role="doc-biblioentry">
-ISO C. n.d. <span>“C99 | 6.4 Lexical Elements.”</span> <a href="http://www.open-std.org/JTC1/SC22/WG14/www/docs/n1256.pdf">http://www.open-std.org/JTC1/SC22/WG14/www/docs/n1256.pdf</a>.
+<div id="ref-preprocessing-tokens" class="csl-entry" role="listitem">
+ISO C. n.d. <em>C99 | 6.4 Lexical Elements</em>. <a href="http://www.open-std.org/JTC1/SC22/WG14/www/docs/n1256.pdf">http://www.open-std.org/JTC1/SC22/WG14/www/docs/n1256.pdf</a>.
 </div>
-<div id="ref-C-Macro-Collections" class="csl-entry" role="doc-biblioentry">
-Leonardo Vencovsky. n.d. <span>“Easy to Use, Header Only, Macro
-Generated, Generic and Type-Safe Data Structures in C.”</span> <a href="https://github.com/LeoVen/C-Macro-Collections">https://github.com/LeoVen/C-Macro-Collections</a>.
+<div id="ref-C-Macro-Collections" class="csl-entry" role="listitem">
+Leonardo Vencovsky. n.d. <em>Easy to Use, Header Only, Macro Generated,
+Generic and Type-Safe Data Structures in C</em>. <a href="https://github.com/LeoVen/C-Macro-Collections">https://github.com/LeoVen/C-Macro-Collections</a>.
 </div>
-<div id="ref-typenum" class="csl-entry" role="doc-biblioentry">
-Paho Lurie-Gregg, and Andre Bogus. n.d. <span>“Compile Time Numbers in
-Rust.”</span> <a href="https://github.com/paholg/typenum">https://github.com/paholg/typenum</a>.
+<div id="ref-typenum" class="csl-entry" role="listitem">
+Paho Lurie-Gregg, and Andre Bogus. n.d. <em>Compile Time Numbers in
+Rust</em>. <a href="https://github.com/paholg/typenum">https://github.com/paholg/typenum</a>.
 </div>
-<div id="ref-mlib" class="csl-entry" role="doc-biblioentry">
-Patrick Pelissier. n.d. <span>“Generic Type-Safe Container Library for C
-Language.”</span> <a href="https://github.com/P-p-H-d/mlib">https://github.com/P-p-H-d/mlib</a>.
+<div id="ref-mlib" class="csl-entry" role="listitem">
+Patrick Pelissier. n.d. <em>Generic Type-Safe Container Library for C
+Language</em>. <a href="https://github.com/P-p-H-d/mlib">https://github.com/P-p-H-d/mlib</a>.
 </div>
-<div id="ref-type-operators-rust" class="csl-entry" role="doc-biblioentry">
-Shea Leffler. n.d.a. <span>“A Macro for Defining Type Operators in
-Rust.”</span> <a href="https://github.com/sdleffler/type-operators-rs">https://github.com/sdleffler/type-operators-rs</a>.
+<div id="ref-type-operators-rust" class="csl-entry" role="listitem">
+Shea Leffler. n.d.-a. <em>A Macro for Defining Type Operators in
+Rust.</em> <a href="https://github.com/sdleffler/type-operators-rs">https://github.com/sdleffler/type-operators-rs</a>.
 </div>
-<div id="ref-rust-type-system-turing-complete" class="csl-entry" role="doc-biblioentry">
-———. n.d.b. <span>“Rust’s Type System Is Turing-Complete.”</span> <a href="https://sdleffler.github.io/RustTypeSystemTuringComplete/">https://sdleffler.github.io/RustTypeSystemTuringComplete/</a>.
+<div id="ref-rust-type-system-turing-complete" class="csl-entry" role="listitem">
+Shea Leffler. n.d.-b. <em>Rust’s Type System Is Turing-Complete</em>. <a href="https://sdleffler.github.io/RustTypeSystemTuringComplete/">https://sdleffler.github.io/RustTypeSystemTuringComplete/</a>.
 </div>
-<div id="ref-fortraith" class="csl-entry" role="doc-biblioentry">
-Szymon Mikulicz. n.d. <span>“Compile-Time Compiler That Compiles Forth
-to Compile-Time Trait Expressions.”</span> <a href="https://github.com/Ashymad/fortraith">https://github.com/Ashymad/fortraith</a>.
+<div id="ref-fortraith" class="csl-entry" role="listitem">
+Szymon Mikulicz. n.d. <em>Compile-Time Compiler That Compiles Forth to
+Compile-Time Trait Expressions</em>. <a href="https://github.com/Ashymad/fortraith">https://github.com/Ashymad/fortraith</a>.
 </div>
-<div id="ref-STC" class="csl-entry" role="doc-biblioentry">
-Tyge Løvset. n.d. <span>“Standard Template Containers for C.”</span> <a href="https://github.com/tylov/STC">https://github.com/tylov/STC</a>.
+<div id="ref-STC" class="csl-entry" role="listitem">
+Tyge Løvset. n.d. <em>Standard Template Containers for C</em>. <a href="https://github.com/tylov/STC">https://github.com/tylov/STC</a>.
 </div>
-<div id="ref-wikipedia-adaptive-grammar" class="csl-entry" role="doc-biblioentry">
-Wikipedia. n.d.a. <span>“Adaptive Grammar.”</span> <a href="https://en.wikipedia.org/wiki/Adaptive_grammar">https://en.wikipedia.org/wiki/Adaptive_grammar</a>.
+<div id="ref-wikipedia-adaptive-grammar" class="csl-entry" role="listitem">
+Wikipedia. n.d.-a. <em>Adaptive Grammar</em>. <a href="https://en.wikipedia.org/wiki/Adaptive_grammar">https://en.wikipedia.org/wiki/Adaptive_grammar</a>.
 </div>
-<div id="ref-hoas" class="csl-entry" role="doc-biblioentry">
-———. n.d.b. <span>“Higher-Order Abstract Syntax Through GADTs.”</span>
+<div id="ref-hoas" class="csl-entry" role="listitem">
+Wikipedia. n.d.-b. <em>Higher-Order Abstract Syntax Through GADTs</em>.
 <a href="https://en.wikipedia.org/wiki/Generalized_algebraic_data_type#Higher-order_abstract_syntax">https://en.wikipedia.org/wiki/Generalized_algebraic_data_type#Higher-order_abstract_syntax</a>.
 </div>
-<div id="ref-type-level-rust-2" class="csl-entry" role="doc-biblioentry">
-Will Crichton. n.d.a. <span>“Implementing a Type-Safe Printf in
-Rust.”</span> <a href="https://willcrichton.net/notes/type-safe-printf/">https://willcrichton.net/notes/type-safe-printf/</a>.
+<div id="ref-type-level-rust-2" class="csl-entry" role="listitem">
+Will Crichton. n.d.-a. <em>Implementing a Type-Safe Printf in Rust</em>.
+<a href="https://willcrichton.net/notes/type-safe-printf/">https://willcrichton.net/notes/type-safe-printf/</a>.
 </div>
-<div id="ref-type-level-rust-1" class="csl-entry" role="doc-biblioentry">
-———. n.d.b. <span>“Type-Level Programming in Rust.”</span> <a href="https://willcrichton.net/notes/type-level-programming/">https://willcrichton.net/notes/type-level-programming/</a>.
+<div id="ref-type-level-rust-1" class="csl-entry" role="listitem">
+Will Crichton. n.d.-b. <em>Type-Level Programming in Rust</em>. <a href="https://willcrichton.net/notes/type-level-programming/">https://willcrichton.net/notes/type-level-programming/</a>.
 </div>
-</div><section class="footnotes footnotes-end-of-document" role="doc-endnotes">
+</div><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr>
 <ol>
-<li id="fn1" role="doc-endnote"><p>“Any sufficiently complicated C or
-Fortran program contains an ad hoc, informally-specified, bug-ridden,
-slow implementation of half of Common Lisp.” – <a href="https://en.wikipedia.org/wiki/Greenspun%27s_tenth_rule">Greenspun’s
+<li id="fn1"><p>“Any sufficiently complicated C or Fortran program
+contains an ad hoc, informally-specified, bug-ridden, slow
+implementation of half of Common Lisp.” – <a href="https://en.wikipedia.org/wiki/Greenspun%27s_tenth_rule">Greenspun’s
 tenth rule</a>, an amusing quote with which I do agree a lot.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2" role="doc-endnote"><p>I wish I had more experience with
-limitless Lisp-style user extension, as in <a href="https://racket-lang.org/">Racket</a> or Common Lisp. Maybe my post
-would have been more profound then.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn3" role="doc-endnote"><p>There is also runtime reflection,
-though I am not sure whether it is a special kind of metaprogramming or
-not. Maybe JIT macros could outperform Java-style runtime reflection? Oh
-my god, that is insane…<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn4" role="doc-endnote"><p>Unless macros generate other macros!
-C/C++ macros cannot do that, while Rusty and Lispy macros can.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn5" role="doc-endnote"><p>It might not be formally correct… if
-your metaprogramming system is Turing-complete, how would you leverage
+<li id="fn2"><p>I wish I had more experience with limitless Lisp-style
+user extension, as in <a href="https://racket-lang.org/">Racket</a> or
+Common Lisp. Maybe my post would have been more profound then.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>There is also runtime reflection, though I am not sure
+whether it is a special kind of metaprogramming or not. Maybe JIT macros
+could outperform Java-style runtime reflection? Oh my god, that is
+insane…<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>Unless macros generate other macros! C/C++ macros cannot
+do that, while Rusty and Lispy macros can.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>It might not be formally correct… if your
+metaprogramming system is Turing-complete, how would you leverage
 everything to a logically consistent type system, as of <a href="https://www.idris-lang.org/">Idris</a>? Surely, this is out of the
 scope of this blog post.<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn6" role="doc-endnote"><p>A <a href="https://en.cppreference.com/w/c/language/statements">compound
+<li id="fn6"><p>A <a href="https://en.cppreference.com/w/c/language/statements">compound
 statement</a> is a sequence of statements put into curly braces.<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn7" role="doc-endnote"><p><a href="https://github.com/Leushenko/C99-Lambda">C99-Lambda</a> is yet
+<li id="fn7"><p><a href="https://github.com/Leushenko/C99-Lambda">C99-Lambda</a> is yet
 another terrifying example of abusing the preprocessor. It attempts to
 <em>alter</em> the native function definition syntax, and therefore it
 looks so odd.<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn8" role="doc-endnote"><p>On the other hand, limitless
-extensibility tied up with a complicated syntax would make mean
-developers mess up with reliable macros again. What a disappointment!
-Returning back to s-expressions…<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn9" role="doc-endnote"><p>For example, the syntax of
-<code>match</code> is gradually evolving over time. Not so long time ago
-the core team has announced <a href="https://blog.rust-lang.org/2021/06/17/Rust-1.53.0.html#or-patterns">“or”
+<li id="fn8"><p>On the other hand, limitless extensibility tied up with
+a complicated syntax would make mean developers mess up with reliable
+macros again. What a disappointment! Returning back to s-expressions…<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p>For example, the syntax of <code>match</code> is
+gradually evolving over time. Not so long time ago the core team has
+announced <a href="https://blog.rust-lang.org/2021/06/17/Rust-1.53.0.html#or-patterns">“or”
 patterns</a>. With an adaptive grammar, this feature could be
 implemented in libraries.<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn10" role="doc-endnote"><p>To the best of my knowledge, Simon
-Tatham was first to formulate the term <em>statement prefix</em>. He
-described precisely how to build custom control flow operators via
-regular <code>#define</code> macros, and make them look natural.<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn11" role="doc-endnote"><p><a href="https://github.com/hirrolot/metalang99">Metalang99</a> is an
+<li id="fn10"><p>To the best of my knowledge, Simon Tatham was first to
+formulate the term <em>statement prefix</em>. He described precisely how
+to build custom control flow operators via regular <code>#define</code>
+macros, and make them look natural.<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="https://github.com/hirrolot/metalang99">Metalang99</a> is an
 advanced metaprogramming system for C99. It is implemented as a purely
 functional programming language, with partial applications, recursion,
 algebraic data types, cons-lists, and all the stuff.<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
