@@ -18,6 +18,11 @@ jobs:
         with:
           version: 3.1.11
 
+      - name: Check Pandoc
+        run: |
+          which pandoc
+          pandoc --version
+
       - name: Install NodeJS
         run: |
           sudo apt update
