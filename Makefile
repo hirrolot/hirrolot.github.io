@@ -7,4 +7,4 @@ new:
 	go run gen.go new
 
 open:
-	xdg-open index.html
+	open index.html
