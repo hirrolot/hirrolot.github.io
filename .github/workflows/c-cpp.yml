@@ -18,11 +18,8 @@ jobs:
         with:
           version: 3.11
 
-      - name: Install NodeJS
-        run: |
-          sudo apt update
-          sudo apt install nodejs
-          npm install jsdom
+      - name: Install npm dependencies
+        run: npm ci --no-audit --no-fund
 
       - name: Build the docs
         run: |
